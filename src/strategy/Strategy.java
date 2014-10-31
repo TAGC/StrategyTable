@@ -11,7 +11,7 @@ import element.Element;
  * @param <T>
  *            the specific type of Operation to handle
  */
-public interface Strategy<T extends Operation> {
+public interface Strategy<T extends Operation<?, ?>> {
 
 	/**
 	 * Handles the execution of an operation on a particular kind of element.

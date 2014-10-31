@@ -1,8 +1,8 @@
 package element;
 
 /**
- * Elements are objects that are instantiated with an integer value and an
- * {@link ElementType} that can be passed to other objects.
+ * Elements are objects that are instantiated with an integer value that can be
+ * passed to other objects.
  * 
  * @author David
  */
@@ -15,11 +15,4 @@ public interface Element {
 	 */
 	int getValue();
 
-	/**
-	 * Returns which type of element this is, which can be used to determine how
-	 * this node's value should be interpreted and used.
-	 * 
-	 * @return the type of this element
-	 */
-	ElementType getType();
 }
