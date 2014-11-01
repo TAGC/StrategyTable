@@ -25,8 +25,8 @@ public class ElementFactory {
 	}
 
 	/**
-	 * Sets whether elements should be cached as they're produced. This method
-	 * is intended for performance testing purposes.
+	 * Sets whether elements should be cached as they're produced. Usage of this
+	 * method is intended for performance testing purposes.
 	 * 
 	 * @param cacheElements
 	 *            {@code true} to enable caching, {@code false} to disable
@@ -37,8 +37,8 @@ public class ElementFactory {
 	}
 
 	/**
-	 * Returns whether elements are being cached as they're produced. This
-	 * method is intended for performance testing purposes.
+	 * Returns whether elements are being cached as they're produced. Usage of
+	 * this method is intended for performance testing purposes.
 	 * 
 	 * @return {@code true} if elements are cached as they are produced,
 	 *         otherwise {@code false}
@@ -52,7 +52,7 @@ public class ElementFactory {
 
 		if (cacheElements && addElementCache.containsKey(value)) {
 			if ((newElement = addElementCache.get(value).get()) != null) {
-				//System.out.println("Cache hit: " + newElement);
+				// System.out.println("Cache hit: " + newElement);
 				assert newElement.getValue() == value;
 				return newElement;
 			}
@@ -70,7 +70,7 @@ public class ElementFactory {
 
 		if (cacheElements && multElementCache.containsKey(value)) {
 			if ((newElement = multElementCache.get(value).get()) != null) {
-				//System.out.println("Cache hit: " + newElement);
+				// System.out.println("Cache hit: " + newElement);
 				assert newElement.getValue() == value;
 				return newElement;
 			}

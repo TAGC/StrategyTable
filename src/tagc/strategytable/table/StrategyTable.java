@@ -38,8 +38,8 @@ public class StrategyTable {
 	 *            a set containing the types of {@code Operation} for this
 	 *            strategy table to handle
 	 * @throws NullPointerException
-	 *             if any of the class sets are null or the table policy is
-	 *             null.
+	 *             if any of the class sets are null or the table policy are
+	 *             {@code null}
 	 * @throws IllegalArgumentException
 	 *             if {@code baseElementClassSet} and
 	 *             {@code decoratedElementClassSet} are not disjoint
@@ -72,8 +72,8 @@ public class StrategyTable {
 	 * @param tablePolicy
 	 *            the policy that this table should use
 	 * @throws NullPointerException
-	 *             if any of the class sets are null or the table policy is
-	 *             null.
+	 *             if any of the class sets are null or the table policy are
+	 *             {@code null}
 	 * @throws IllegalArgumentException
 	 *             if {@code baseElementClassSet} and
 	 *             {@code decoratedElementClassSet} are not disjoint
@@ -101,8 +101,9 @@ public class StrategyTable {
 		table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>>();
 		elementLockStates = new HashMap<Class<? extends Element>, Boolean>();
 		operationLockStates = new HashMap<Class<? extends Operation<?, ?>>, Boolean>();
-		
-		final Set<Class<? extends Element>> combinedElementClassSet = new HashSet<Class<? extends Element>>(baseElementClassSet);
+
+		final Set<Class<? extends Element>> combinedElementClassSet = new HashSet<Class<? extends Element>>(
+				baseElementClassSet);
 		combinedElementClassSet.addAll(decoratedElementClassSet);
 
 		for (Class<? extends Element> elementClass : combinedElementClassSet) {
@@ -113,8 +114,8 @@ public class StrategyTable {
 
 			for (Class<? extends Operation<?, ?>> operationClass : operationClassSet) {
 				operationLockStates.put(operationClass, false);
-				
-				if(decoratedElementClassSet.contains(elementClass)) {
+
+				if (decoratedElementClassSet.contains(elementClass)) {
 					strategyMap.put(operationClass, tablePolicy.createDefaultDecoratedStrategy());
 				} else {
 					strategyMap.put(operationClass, tablePolicy.createDefaultBaseStrategy());
@@ -140,12 +141,13 @@ public class StrategyTable {
 	 *            locked
 	 * @return {@code true} if and only if {@link #isOperationLocked} {@code ||}
 	 *         {@link #isElementLocked}
+	 * @throws NullPointerException
+	 *             if {@code operationType} or {@code elementType} are
+	 *             {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
-	 *             elements of type {@code elementType}
-	 * @throws IllegalArgumentException
-	 *             if this strategy table has not been configured to support
-	 *             operations of type {@code operationType}
+	 *             elements of type {@code elementType} or operations of type
+	 *             {@code operationType}
 	 */
 	public boolean isStrategyLocked(Class<? extends Operation<?, ?>> operationType, Class<? extends Element> elementType) {
 		return isOperationLocked(operationType) || isElementLocked(elementType);
@@ -162,11 +164,16 @@ public class StrategyTable {
 	 *            locked for
 	 * @return {@code true} if strategies have been locked for operations of
 	 *         type {@code operationType}, otherwise {@code false}
+	 * @throws NullPointerException
+	 *             if {@code operationType} is {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             operations of type {@code operationType}
 	 */
 	public boolean isOperationLocked(Class<? extends Operation<?, ?>> operationType) {
+		if (operationType == null)
+			throw new NullPointerException("The operation type cannot be null");
+
 		if (!operationLockStates.containsKey(operationType))
 			throw new IllegalArgumentException(
 					"This strategy table has not been configured to support operations of type "
@@ -186,11 +193,16 @@ public class StrategyTable {
 	 *            locked for
 	 * @return {@code true} if strategies have been locked for elements of type
 	 *         {@code elementType}, otherwise {@code false}
+	 * @throws NullPointerException
+	 *             if {@code operationType} is {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 */
 	public boolean isElementLocked(Class<? extends Element> elementType) {
+		if (elementType == null)
+			throw new NullPointerException("The element type cannot be null");
+
 		if (!elementLockStates.containsKey(elementType))
 			throw new IllegalArgumentException(
 					"This strategy table has not been configured to support elements of type "
@@ -207,12 +219,17 @@ public class StrategyTable {
 	 *            the type of operation to lock or unlock strategies for
 	 * @param locked
 	 *            {@code true} to lock in the strategies for
-	 *            {@code operationType} , {@code false} to unlock them
+	 *            {@code operationType}, {@code false} to unlock them
+	 * @throws NullPointerException
+	 *             if {@code operationType} is {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             operations of type {@code operationType}
 	 */
 	public void setOperationStrategiesLocked(Class<? extends Operation<?, ?>> operationType, boolean locked) {
+		if (operationType == null)
+			throw new NullPointerException("The operation type cannot be null");
+
 		if (!operationLockStates.containsKey(operationType))
 			throw new IllegalArgumentException(
 					"This strategy table has not been configured to support operations of type "
@@ -230,11 +247,16 @@ public class StrategyTable {
 	 * @param locked
 	 *            {@code true} to lock in the strategies for {@code elementType}
 	 *            , {@code false} to unlock them
+	 * @throws NullPointerException
+	 *             if {@code elementType} is {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 */
 	public void setElementStrategiesLocked(Class<? extends Element> elementType, boolean locked) {
+		if (elementType == null)
+			throw new NullPointerException("The element type cannot be null");
+
 		if (!elementLockStates.containsKey(elementType))
 			throw new IllegalArgumentException(
 					"This strategy table has not been configured to support elements of type "
@@ -267,16 +289,27 @@ public class StrategyTable {
 	 *            on an element
 	 * @return {@code true} if the strategy was successfully registered,
 	 *         otherwise {@code false}.
+	 * @throws NullPointerException
+	 *             if {@code operationType}, {@code elementType} or
+	 *             {@code strategy} are {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
-	 *             elements of type {@code elementType}
-	 * @throws IllegalArgumentException
-	 *             if this strategy table has not been configured to support
-	 *             operations of type {@code operationType}
+	 *             elements of type {@code elementType} or operations of type
+	 *             {@code operationType}
 	 * @see #isStrategyLocked(Class, Class)
 	 */
 	public <T extends Operation<?, ?>> boolean addOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType, Strategy<T> strategy) {
+
+		if (operationType == null)
+			throw new NullPointerException("The operation type cannot be null");
+
+		if (elementType == null)
+			throw new NullPointerException("The element type cannot be null");
+
+		if (strategy == null)
+			throw new NullPointerException("The strategy cannot be null");
+
 		if (isStrategyLocked(operationType, elementType))
 			return false;
 
@@ -306,6 +339,8 @@ public class StrategyTable {
 	 * @return {@code true} if the strategy registration process succeeded for
 	 *         all types of element that this strategy table is configured to
 	 *         work for, otherwise {@code false}
+	 * @throws NullPointerException
+	 *             if {@code operationType} or {@code strategy} are {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             operations of type {@code operationType}
@@ -344,16 +379,24 @@ public class StrategyTable {
 	 *            handle
 	 * @return {@code true} if the null strategy was successfully registered,
 	 *         otherwise {@code false}.
+	 * @throws NullPointerException
+	 *             if {@code operationType} or {@code elementType} are
+	 *             {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
-	 *             elements of type {@code elementType}
-	 * @throws IllegalArgumentException
-	 *             if this strategy table has not been configured to support
-	 *             operations of type {@code operationType}
+	 *             elements of type {@code elementType} or operations of type
+	 *             {@code operationType}
 	 * @see #isStrategyLocked(Class, Class)
 	 */
 	public <T extends Operation<?, ?>> boolean addNullOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
+
+		if (operationType == null)
+			throw new NullPointerException("The operation type cannot be null");
+
+		if (elementType == null)
+			throw new NullPointerException("The element type cannot be null");
+
 		if (isStrategyLocked(operationType, elementType))
 			return false;
 
@@ -377,6 +420,8 @@ public class StrategyTable {
 	 * @param operationType
 	 *            the {@code class} of {@code Operation} for the null strategy
 	 *            to handle
+	 * @throws NullPointerException
+	 *             if {@code operationType} is {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             operations of type {@code operationType}
@@ -413,11 +458,16 @@ public class StrategyTable {
 	 * @param elementType
 	 *            the {@code class} of {@code Element} to be ignored by
 	 *            operations
+	 * @throws NullPointerException
+	 *             {@code elementType} is {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 */
 	public void addNullElementStrategies(Class<? extends Element> elementType) {
+		if (elementType == null)
+			throw new NullPointerException("The element type cannot be null");
+
 		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap;
 		strategyMap = getStrategyMap(elementType);
 
@@ -496,12 +546,20 @@ public class StrategyTable {
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
+	 * @throws NullPointerException
+	 *             if {@code operation} or {@code element} are {@code null}
 	 * @throws UnsupportedOperationException
 	 *             if there is no explicitly registered {@code Strategy} for the
 	 *             types of {@code operation} and {@code element} and this
 	 *             strategy table's {@code policy} is set to {@code Strict}.
 	 */
 	public <T extends Operation<?, ?>> void operate(T operation, Element element) {
+
+		if (operation == null)
+			throw new NullPointerException("The operation cannot be null");
+
+		if (element == null)
+			throw new NullPointerException("The element cannot be null");
 
 		/*
 		 * It's safe to make this cast because #getClass() will return the
@@ -529,15 +587,24 @@ public class StrategyTable {
 	 * @param elements
 	 *            the collection of {@code Element} objects to have
 	 *            {@code operation} applied to
+	 * @throws NullPointerException
+	 *             if {@code operation} or {@code elements} are {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 * @throws UnsupportedOperationException
 	 *             if there is no explicitly registered {@code Strategy} for the
 	 *             types of {@code operation} and {@code element} and this
-	 *             strategy table's {@code policy} is set to {@code Strict}.
+	 *             strategy table's policy is set to
+	 *             {@link StrategyTablePolicy#STRICT}
 	 */
 	public <T extends Operation<?, ?>> void operateOverCollection(T operation, Collection<? extends Element> elements) {
+		if (operation == null)
+			throw new NullPointerException("The operation cannot be null");
+
+		if (elements == null)
+			throw new NullPointerException("The collection of elements cannot be null");
+
 		for (Element e : elements) {
 			operate(operation, e);
 		}
@@ -553,15 +620,22 @@ public class StrategyTable {
 	 *            the type of {@code Element}
 	 * @return the runtime type of the {@code Strategy} object corresponding to
 	 *         {@code operationType} and {@code elementType}
+	 * @throws NullPointerException
+	 *             if {@code operationType} or {@code elementType} are
+	 *             {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
-	 *             elements of type {@code elementType}
-	 * @throws IllegalArgumentException
-	 *             if this strategy table has not been configured to support
-	 *             operations of type {@code operationType}
+	 *             elements of type {@code elementType} and operations of type
+	 *             {@code operationType}
 	 */
 	public <T extends Operation<?, ?>> Class<? extends Strategy<T>> getStrategyType(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
+
+		if (operationType == null)
+			throw new NullPointerException("The operation type cannot be null");
+
+		if (elementType == null)
+			throw new NullPointerException("The element type cannot be null");
 
 		return getStrategyTypeHelper(operationType, elementType);
 	}
