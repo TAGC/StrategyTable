@@ -1,4 +1,4 @@
-package element;
+package tagc.strategytable.element;
 
 
 public abstract class AbstractElement implements Element {

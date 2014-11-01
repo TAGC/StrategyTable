@@ -1,6 +1,6 @@
-package operation;
+package tagc.strategytable.operation;
 
-import element.Element;
+import tagc.strategytable.element.Element;
 
 /**
  * Operations encapsulate pieces of functionality that can be performed using

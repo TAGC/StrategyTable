@@ -1,7 +1,7 @@
-package strategy;
+package tagc.strategytable.strategy;
 
-import operation.FindTotalOperation;
-import element.Element;
+import tagc.strategytable.element.Element;
+import tagc.strategytable.operation.FindTotalOperation;
 
 public class MultTotalOperationStrategy implements Strategy<FindTotalOperation> {
 

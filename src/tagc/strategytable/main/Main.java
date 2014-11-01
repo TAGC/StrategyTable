@@ -1,22 +1,22 @@
-package main;
+package tagc.strategytable.main;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import operation.CountElementOperation;
-import operation.FindTotalOperation;
-import operation.Operation;
-import operation.PureOperation;
-import strategy.AddTotalOperationStrategy;
-import strategy.CountElementOperationStrategy;
-import strategy.MultTotalOperationStrategy;
-import table.StrategyTable;
-import element.AddElement;
-import element.Element;
-import element.IgnoreElementDecorator;
-import element.MultElement;
+import tagc.strategytable.element.AddElement;
+import tagc.strategytable.element.Element;
+import tagc.strategytable.element.IgnoreElementDecorator;
+import tagc.strategytable.element.MultElement;
+import tagc.strategytable.operation.CountElementOperation;
+import tagc.strategytable.operation.FindTotalOperation;
+import tagc.strategytable.operation.Operation;
+import tagc.strategytable.operation.PureOperation;
+import tagc.strategytable.strategy.AddTotalOperationStrategy;
+import tagc.strategytable.strategy.CountElementOperationStrategy;
+import tagc.strategytable.strategy.MultTotalOperationStrategy;
+import tagc.strategytable.table.StrategyTable;
 
 public class Main {
 

@@ -1,7 +1,7 @@
-package strategy;
+package tagc.strategytable.strategy;
 
-import operation.Operation;
-import element.Element;
+import tagc.strategytable.element.Element;
+import tagc.strategytable.operation.Operation;
 
 
 public class NullStrategy<T extends Operation<?, ?>> implements Strategy<T> {

@@ -1,4 +1,4 @@
-package element;
+package tagc.strategytable.element;
 
 public class IgnoreElementDecorator extends AbstractElement {
 

@@ -1,4 +1,4 @@
-package element;
+package tagc.strategytable.element;
 
 /**
  * Elements are objects that are instantiated with an integer value that can be

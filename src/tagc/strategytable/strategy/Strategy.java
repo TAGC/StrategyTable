@@ -1,7 +1,7 @@
-package strategy;
+package tagc.strategytable.strategy;
 
-import operation.Operation;
-import element.Element;
+import tagc.strategytable.element.Element;
+import tagc.strategytable.operation.Operation;
 
 /**
  * Strategies encapsulate a particular method for applying an {@link Operation}

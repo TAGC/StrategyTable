@@ -1,4 +1,4 @@
-package operation;
+package tagc.strategytable.operation;
 
 /**
  * This is a convenience interface for {@link Operation} objects that store and

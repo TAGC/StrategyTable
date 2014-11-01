@@ -1,4 +1,4 @@
-package operation;
+package tagc.strategytable.operation;
 
 public class CountElementOperation implements PureOperation<Integer> {
 	

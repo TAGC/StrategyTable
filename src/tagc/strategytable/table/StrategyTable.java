@@ -1,4 +1,4 @@
-package table;
+package tagc.strategytable.table;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import operation.Operation;
-import strategy.NullStrategy;
-import strategy.Strategy;
-import element.Element;
+import tagc.strategytable.element.Element;
+import tagc.strategytable.operation.Operation;
+import tagc.strategytable.strategy.NullStrategy;
+import tagc.strategytable.strategy.Strategy;
 
 public class StrategyTable {
 

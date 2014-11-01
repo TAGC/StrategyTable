@@ -1,7 +1,7 @@
-package strategy;
+package tagc.strategytable.strategy;
 
-import operation.CountElementOperation;
-import element.Element;
+import tagc.strategytable.element.Element;
+import tagc.strategytable.operation.CountElementOperation;
 
 public class CountElementOperationStrategy implements Strategy<CountElementOperation> {
 
