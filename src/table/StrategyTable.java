@@ -1,5 +1,6 @@
 package table;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -158,27 +159,46 @@ public class StrategyTable {
 	 *             types of {@code operation} and {@code element} and this
 	 *             strategy table's {@code policy} is set to {@code Strict}.
 	 */
-	public <I, O> void operate(Operation<I, O> operation, Element element) {
-
-		Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> map = table.get(element.getClass());
-
-		if (map == null)
-			throw new IllegalArgumentException("There are no operations defined to work with this type of element");
+	public <T extends Operation<?, ?>> void operate(T operation, Element element) {
 
 		/*
 		 * It's safe to make this cast because #getClass() will return the
 		 * runtime type of the operation which we can guarantee the type of.
 		 */
 		@SuppressWarnings("unchecked")
-		final Class<? extends Operation<I, O>> operationType = (Class<? extends Operation<I, O>>) operation.getClass();
+		final Class<? extends T> operationType = (Class<? extends T>) operation.getClass();
 		final Class<? extends Element> elementType = element.getClass();
-		Strategy<Operation<I, O>> strategy = getOperationElementStrategy(operationType, elementType);
+		final Strategy<T> strategy = getOperationElementStrategy(operationType, elementType);
 
 		if (strategy == null)
 			throw new IllegalArgumentException(
 					"There are no strategies defined to work with this type of operation for this element");
 
 		strategy.execute(operation, element);
+	}
+
+	/**
+	 * Handles the execution of {@code operation} over a collection of
+	 * {@code Element} objects in sequence based on the appropriate registered
+	 * {@link Strategy} (if any) and this strategy table's {@code policy}.
+	 * 
+	 * @param operation
+	 *            the operation to perform on {@code element}
+	 * @param elements
+	 *            the collection of {@code Element} objects to have
+	 *            {@code operation} applied to
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 * @throws UnsupportedOperationException
+	 *             if there is no explicitly registered {@code Strategy} for the
+	 *             types of {@code operation} and {@code element} and this
+	 *             strategy table's {@code policy} is set to {@code Strict}.
+	 */
+	public <T extends Operation<?, ?>> void operateOverCollection(T operation, Collection<? extends Element> elements) {
+		for (Element e : elements) {
+			operate(operation, e);
+		}
 	}
 
 	/**

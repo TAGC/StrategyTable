@@ -31,6 +31,7 @@ public class Main {
 
 		System.out.println(strategyTable);
 
+		System.out.println("Configured strategies");
 		for (Class<? extends Element> elementClass : elementClassSet) {
 			for (Class<? extends Operation<?, ?>> operationClass : operationClassSet) {
 				System.out.printf("%s + %s = %s\n", elementClass.getSimpleName(), operationClass.getSimpleName(),
@@ -46,11 +47,10 @@ public class Main {
 
 		final PureOperation<Integer> totalOperation = new FindTotalOperation();
 		final PureOperation<Integer> countOperation = new CountElementOperation();
-		for (Element e : elements) {
-			strategyTable.operate(totalOperation, e);
-			strategyTable.operate(countOperation, e);
-		}
-
+		strategyTable.operateOverCollection(totalOperation, elements);
+		strategyTable.operateOverCollection(countOperation, elements);
+		
+		System.out.println("\nOperation results");
 		System.out.println("Total: " + totalOperation.get());
 		System.out.println("Element count: " + countOperation.get());
 	}
