@@ -49,7 +49,7 @@ public class Main {
 		final PureOperation<Integer> countOperation = new CountElementOperation();
 		strategyTable.operateOverCollection(totalOperation, elements);
 		strategyTable.operateOverCollection(countOperation, elements);
-		
+
 		System.out.println("\nOperation results");
 		System.out.println("Total: " + totalOperation.get());
 		System.out.println("Element count: " + countOperation.get());
@@ -60,25 +60,23 @@ public class Main {
 		final StrategyTable strategyTable = new StrategyTable(elementClassSet, operationClassSet);
 
 		/*
-		 * Total finding operation.
+		 * Specifies all operations to ignore IgnoreElementDecorator elements
+		 * and lock that in.
+		 */
+		strategyTable.addNullElementStrategies(IgnoreElementDecorator.class);
+		strategyTable.setElementStrategiesLocked(IgnoreElementDecorator.class, true);
+
+		/*
+		 * Specifies strategies for 'FindTotalOperation' operations.
 		 */
 		strategyTable.addOperationStrategy(FindTotalOperation.class, AddElement.class, new AddTotalOperationStrategy());
-
 		strategyTable.addOperationStrategy(FindTotalOperation.class, MultElement.class,
 				new MultTotalOperationStrategy());
 
-		strategyTable.addNullOperationStrategy(FindTotalOperation.class, IgnoreElementDecorator.class);
-
 		/*
-		 * Counting operation.
+		 * Specifies strategies for 'CountElementOperation' operations.
 		 */
-		strategyTable.addOperationStrategy(CountElementOperation.class, AddElement.class,
-				new CountElementOperationStrategy());
-
-		strategyTable.addOperationStrategy(CountElementOperation.class, MultElement.class,
-				new CountElementOperationStrategy());
-
-		strategyTable.addNullOperationStrategy(CountElementOperation.class, IgnoreElementDecorator.class);
+		strategyTable.addOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
 
 		return strategyTable;
 	}

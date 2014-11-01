@@ -14,16 +14,39 @@ import tagc.strategytable.strategy.Strategy;
 public class StrategyTable {
 
 	private final Map<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>> table;
+	private final Map<Class<? extends Element>, Boolean> elementLockStates;
+	private final Map<Class<? extends Operation<?, ?>>, Boolean> operationLockStates;
 
+	/**
+	 * Constructs and configures a {@code StrategyTable} which can associate
+	 * strategies for any element of a type provided within
+	 * {@code elementClassSet} and any operation of a type provided within
+	 * {@code operationClassSet}.
+	 * <p>
+	 * A null strategy is initially configured to handle every combination of
+	 * element type and operation type.
+	 * 
+	 * @param elementClassSet
+	 *            a set containing the types of {@code Element} for this
+	 *            strategy table to handle
+	 * @param operationClassSet
+	 *            a set containing the types of {@code Operation} for this
+	 *            strategy table to handle
+	 */
 	public StrategyTable(Set<Class<? extends Element>> elementClassSet,
 			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
 		table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>>();
+		elementLockStates = new HashMap<Class<? extends Element>, Boolean>();
+		operationLockStates = new HashMap<Class<? extends Operation<?, ?>>, Boolean>();
 
 		for (Class<? extends Element> elementClass : elementClassSet) {
+			elementLockStates.put(elementClass, false);
+
 			final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap;
 			strategyMap = new HashMap<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>();
 
 			for (Class<? extends Operation<?, ?>> operationClass : operationClassSet) {
+				operationLockStates.put(operationClass, false);
 				strategyMap.put(operationClass, createNullStrategy());
 			}
 
@@ -32,13 +55,135 @@ public class StrategyTable {
 	}
 
 	/**
+	 * Returns whether the strategy used to handle operations of type
+	 * {@code operationType} for elements of the type {@code elementType} has
+	 * been locked in. This is the case if strategies have been locked in for
+	 * either all operations of type {@code operationType} or all elements of
+	 * type {@code elementType}.
+	 * 
+	 * @param operationType
+	 *            the type of operation associated with the strategy to test is
+	 *            locked locked for
+	 * @param elementType
+	 *            the type of element associated with the strategy to test is
+	 *            locked
+	 * @return {@code true} if and only if {@link #isOperationLocked} {@code ||}
+	 *         {@link #isElementLocked}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             operations of type {@code operationType}
+	 */
+	public boolean isStrategyLocked(Class<? extends Operation<?, ?>> operationType, Class<? extends Element> elementType) {
+		return isOperationLocked(operationType) || isElementLocked(elementType);
+	}
+
+	/**
+	 * Returns whether the types of strategies for operations of type
+	 * {@code operationType} have been locked in. If a strategy is locked in,
+	 * future operations to change it will fail unless the strategy is
+	 * explicitly unlocked first.
+	 * 
+	 * @param operationType
+	 *            the type of operation to test whether strategies have been
+	 *            locked for
+	 * @return {@code true} if strategies have been locked for operations of
+	 *         type {@code operationType}, otherwise {@code false}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             operations of type {@code operationType}
+	 */
+	public boolean isOperationLocked(Class<? extends Operation<?, ?>> operationType) {
+		if (!operationLockStates.containsKey(operationType))
+			throw new IllegalArgumentException(
+					"This strategy table has not been configured to support operations of type "
+							+ operationType.getSimpleName());
+
+		return operationLockStates.get(operationType);
+	}
+
+	/**
+	 * Returns whether the types of strategies for elements of type
+	 * {@code elementType} have been locked in. If a strategy is locked in,
+	 * future operations to change it will fail unless the strategy is
+	 * explicitly unlocked first.
+	 * 
+	 * @param elementType
+	 *            the type of element to test whether strategies have been
+	 *            locked for
+	 * @return {@code true} if strategies have been locked for elements of type
+	 *         {@code elementType}, otherwise {@code false}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 */
+	public boolean isElementLocked(Class<? extends Element> elementType) {
+		if (!elementLockStates.containsKey(elementType))
+			throw new IllegalArgumentException(
+					"This strategy table has not been configured to support elements of type "
+							+ elementType.getSimpleName());
+
+		return elementLockStates.get(elementType);
+	}
+
+	/**
+	 * Sets whether the strategies associated with a particular type of
+	 * operation should be locked in or not.
+	 * 
+	 * @param operationType
+	 *            the type of operation to lock or unlock strategies for
+	 * @param locked
+	 *            {@code true} to lock in the strategies for
+	 *            {@code operationType} , {@code false} to unlock them
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             operations of type {@code operationType}
+	 */
+	public void setOperationStrategiesLocked(Class<? extends Operation<?, ?>> operationType, boolean locked) {
+		if (!operationLockStates.containsKey(operationType))
+			throw new IllegalArgumentException(
+					"This strategy table has not been configured to support operations of type "
+							+ operationType.getSimpleName());
+
+		operationLockStates.put(operationType, locked);
+	}
+
+	/**
+	 * Sets whether the strategies associated with a particular type of element
+	 * should be locked in or not.
+	 * 
+	 * @param elementType
+	 *            the type of element to lock or unlock strategies for
+	 * @param locked
+	 *            {@code true} to lock in the strategies for {@code elementType}
+	 *            , {@code false} to unlock them
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 */
+	public void setElementStrategiesLocked(Class<? extends Element> elementType, boolean locked) {
+		if (!elementLockStates.containsKey(elementType))
+			throw new IllegalArgumentException(
+					"This strategy table has not been configured to support elements of type "
+							+ elementType.getSimpleName());
+
+		elementLockStates.put(elementType, locked);
+	}
+
+	/**
 	 * Registers {@code strategy} to be used to handle operations of the type
 	 * {@code operationType} for elements of the type {@code elementType}.
 	 * <p>
-	 * In other words, this method specifies that the {@link Strategy} object
-	 * {@code strategy} should be executed using an operation {@code o} and an
-	 * element {@code e} if {@code o.getClass().equals(operationType)} and
+	 * In other words, this method specifies that {@code strategy} should be
+	 * executed using an operation {@code o} and an element {@code e} if
+	 * {@code o.getClass().equals(operationType)} and
 	 * {@code e.getClass().equals(elementType)}.
+	 * <p>
+	 * Strategies will only be successfully registered if the existing strategy
+	 * associated with {@code operationType} and {@code elementType} is not
+	 * locked in.
 	 * 
 	 * @param operationType
 	 *            the {@code class} of {@code Operation} for {@code strategy} to
@@ -49,18 +194,63 @@ public class StrategyTable {
 	 * @param strategy
 	 *            a {@code Strategy} object to handle execution of an operation
 	 *            on an element
+	 * @return {@code true} if the strategy was successfully registered,
+	 *         otherwise {@code false}.
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             operations of type {@code operationType}
+	 * @see #isStrategyLocked(Class, Class)
 	 */
-	public <T extends Operation<?, ?>> void addOperationStrategy(Class<? extends T> operationType,
+	public <T extends Operation<?, ?>> boolean addOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType, Strategy<T> strategy) {
+		if (isStrategyLocked(operationType, elementType))
+			return false;
 
-		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap = getStrategyMap(elementType);
-		putOperationStrategy(strategyMap, operationType, strategy);
+		putOperationStrategy(operationType, elementType, strategy);
+		return true;
+	}
+
+	/**
+	 * Registers {@code strategy} to be used to handle operations of the type
+	 * {@code operationType} for every type of element that this strategy table
+	 * is configured to work for.
+	 * <p>
+	 * In other words, this method specifies that {@code strategy} should be
+	 * executed using an operation {@code o} and any element {@code e} if
+	 * {@code o.getClass().equals(operationType)}.
+	 * <p>
+	 * Strategies will only be successfully registered if the existing strategy
+	 * associated with {@code operationType} and {@code elementType} is not
+	 * locked in.
+	 * 
+	 * @param operationType
+	 *            the {@code class} of {@code Operation} for {@code strategy} to
+	 *            handle
+	 * @param strategy
+	 *            a {@code Strategy} object to handle execution of an operation
+	 *            on an element
+	 * @return {@code true} if the strategy registration process succeeded for
+	 *         all types of element that this strategy table is configured to
+	 *         work for, otherwise {@code false}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             operations of type {@code operationType}
+	 * @see #addOperationStrategy(Class, Class, Strategy)
+	 * @see #isStrategyLocked(Class, Class)
+	 */
+	public <T extends Operation<?, ?>> boolean addOperationStrategies(Class<? extends T> operationType,
+			Strategy<T> strategy) {
+		boolean totalSuccess = true;
+
+		for (Class<? extends Element> elementType : table.keySet()) {
+			final boolean success = addOperationStrategy(operationType, elementType, strategy);
+			totalSuccess &= success;
+		}
+
+		return totalSuccess;
 	}
 
 	/**
@@ -70,6 +260,10 @@ public class StrategyTable {
 	 * A null strategy conforms to the interface for a {@link Strategy} but
 	 * performs no actions when executed. These strategies will leave the state
 	 * of an {@code Operation} object unchanged.
+	 * <p>
+	 * Strategies will only be successfully registered if the existing strategy
+	 * associated with {@code operationType} and {@code elementType} is not
+	 * locked in.
 	 * 
 	 * @param operationType
 	 *            the {@code class} of {@code Operation} for the null strategy
@@ -77,18 +271,88 @@ public class StrategyTable {
 	 * @param elementType
 	 *            the {@code class} of {@code Element} for the null strategy to
 	 *            handle
+	 * @return {@code true} if the null strategy was successfully registered,
+	 *         otherwise {@code false}.
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             operations of type {@code operationType}
+	 * @see #isStrategyLocked(Class, Class)
 	 */
-	public <T extends Operation<?, ?>> void addNullOperationStrategy(Class<? extends T> operationType,
+	public <T extends Operation<?, ?>> boolean addNullOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
+		if (isStrategyLocked(operationType, elementType))
+			return false;
 
-		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap = getStrategyMap(elementType);
-		putOperationStrategy(strategyMap, operationType, StrategyTable.<T> createNullStrategy());
+		putOperationStrategy(operationType, elementType, StrategyTable.<T> createNullStrategy());
+		return true;
+	}
+
+	/**
+	 * Registers a 'null' strategy to be used to handle operations of the type
+	 * {@code operationType} for every type of element that this strategy table
+	 * is configured to work for.
+	 * <p>
+	 * A null strategy conforms to the interface for a {@link Strategy} but
+	 * performs no actions when executed. These strategies will leave the state
+	 * of an {@code Operation} object unchanged.
+	 * <p>
+	 * Strategies will only be successfully registered if the existing strategy
+	 * associated with {@code operationType} and {@code elementType} is not
+	 * locked in.
+	 * 
+	 * @param operationType
+	 *            the {@code class} of {@code Operation} for the null strategy
+	 *            to handle
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             operations of type {@code operationType}
+	 * @return {@code true} if the strategy registration process succeeded for
+	 *         all types of element that this strategy table is configured to
+	 *         work for, otherwise {@code false}
+	 * @see #addNullOperationStrategy(Class, Class)
+	 * @see #isStrategyLocked(Class, Class)
+	 */
+	public <T extends Operation<?, ?>> boolean addNullOperationStrategies(Class<? extends T> operationType) {
+		boolean totalSuccess = true;
+
+		for (Class<? extends Element> elementType : table.keySet()) {
+			final boolean success = addNullOperationStrategy(operationType, elementType);
+			totalSuccess &= success;
+		}
+
+		return totalSuccess;
+	}
+
+	/**
+	 * Registers a null strategy to be used to handle every operation on
+	 * elements of type {@code elementType}.
+	 * <p>
+	 * In other words, this method specifies that no actions should be performed
+	 * by any operation that acts on an element {@code e} if
+	 * {@code e.getClass().equals(elementType)}. Later calls to
+	 * {@link #addOperationStrategy} can be used to replace null strategies for
+	 * certain operations if desired.
+	 * <p>
+	 * One example of where it may be appropriate to call this method on a type
+	 * of element that should be ignored by most or all operations.
+	 * 
+	 * @param elementType
+	 *            the {@code class} of {@code Element} to be ignored by
+	 *            operations
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 */
+	public void addNullElementStrategies(Class<? extends Element> elementType) {
+		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap;
+		strategyMap = getStrategyMap(elementType);
+
+		for (Class<? extends Operation<?, ?>> operationType : strategyMap.keySet()) {
+			putOperationStrategy(operationType, elementType, createNullStrategy());
+		}
 	}
 
 	private static <T extends Operation<?, ?>> Strategy<T> createNullStrategy() {
@@ -105,7 +369,7 @@ public class StrategyTable {
 		return table.get(elementType);
 	}
 
-	private <T extends Operation<?, ?>> void putOperationStrategy(
+	private <T extends Operation<?, ?>> void putOperationStrategyHelper(
 			Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap,
 			Class<? extends T> operationType, Strategy<T> strategy) {
 
@@ -117,13 +381,20 @@ public class StrategyTable {
 		strategyMap.put(operationType, strategy);
 	}
 
+	private <T extends Operation<?, ?>> void putOperationStrategy(Class<? extends T> operationType,
+			Class<? extends Element> elementType, Strategy<T> strategy) {
+
+		assert !isStrategyLocked(operationType, elementType) : "Illegal modification of strategy when locked";
+		putOperationStrategyHelper(getStrategyMap(elementType), operationType, strategy);
+	}
+
 	/*
 	 * We know that this is a safe cast because #putOperationStrategy is
 	 * typesafe and is the only way a strategy can be associated with an
 	 * operation.
 	 */
 	@SuppressWarnings("unchecked")
-	private <T extends Operation<?, ?>> Strategy<T> getOperationStrategy(
+	private <T extends Operation<?, ?>> Strategy<T> getOperationStrategyHelper(
 			Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap,
 			Class<? extends T> operationType) {
 
@@ -135,10 +406,10 @@ public class StrategyTable {
 		return (Strategy<T>) strategyMap.get(operationType);
 	}
 
-	private <T extends Operation<?, ?>> Strategy<T> getOperationElementStrategy(Class<? extends T> operationType,
+	private <T extends Operation<?, ?>> Strategy<T> getOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
 
-		return getOperationStrategy(getStrategyMap(elementType), operationType);
+		return getOperationStrategyHelper(getStrategyMap(elementType), operationType);
 	}
 
 	/**
@@ -168,7 +439,7 @@ public class StrategyTable {
 		@SuppressWarnings("unchecked")
 		final Class<? extends T> operationType = (Class<? extends T>) operation.getClass();
 		final Class<? extends Element> elementType = element.getClass();
-		final Strategy<T> strategy = getOperationElementStrategy(operationType, elementType);
+		final Strategy<T> strategy = getOperationStrategy(operationType, elementType);
 
 		if (strategy == null)
 			throw new IllegalArgumentException(
@@ -233,7 +504,7 @@ public class StrategyTable {
 	private <T extends Operation<?, ?>> Class<? extends Strategy<T>> getStrategyTypeHelper(
 			Class<? extends T> operationType, Class<? extends Element> elementType) {
 
-		final Strategy<T> strategy = getOperationElementStrategy(operationType, elementType);
+		final Strategy<T> strategy = getOperationStrategy(operationType, elementType);
 		return (Class<? extends Strategy<T>>) strategy.getClass();
 	}
 
