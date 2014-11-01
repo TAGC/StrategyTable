@@ -18,40 +18,68 @@ public class ElementFactory {
 	 */
 	private static final Map<Integer, SoftReference<AddElement>> addElementCache = new HashMap<Integer, SoftReference<AddElement>>();
 	private static final Map<Integer, SoftReference<MultElement>> multElementCache = new HashMap<Integer, SoftReference<MultElement>>();
+	private static boolean cacheElements = true;
 
 	private ElementFactory() {
 		throw new AssertionError("ElementFactory should not be instantiable");
 	}
 
+	/**
+	 * Sets whether elements should be cached as they're produced. This method
+	 * is intended for performance testing purposes.
+	 * 
+	 * @param cacheElements
+	 *            {@code true} to enable caching, {@code false} to disable
+	 *            caching
+	 */
+	public static void setCachingElements(boolean cacheElements) {
+		ElementFactory.cacheElements = cacheElements;
+	}
+
+	/**
+	 * Returns whether elements are being cached as they're produced. This
+	 * method is intended for performance testing purposes.
+	 * 
+	 * @return {@code true} if elements are cached as they are produced,
+	 *         otherwise {@code false}
+	 */
+	public static boolean isCachingElements() {
+		return ElementFactory.cacheElements;
+	}
+
 	public static AddElement createAddElement(int value) {
 		AddElement newElement;
-		
-		if(addElementCache.containsKey(value)) {
-			if((newElement = addElementCache.get(value).get()) != null) {
-				System.out.println("Cache hit: " + newElement);
+
+		if (cacheElements && addElementCache.containsKey(value)) {
+			if ((newElement = addElementCache.get(value).get()) != null) {
+				//System.out.println("Cache hit: " + newElement);
 				assert newElement.getValue() == value;
 				return newElement;
 			}
 		}
-		
+
 		newElement = new AddElement(value);
-		addElementCache.put(value, new SoftReference<AddElement>(newElement));
+		if (cacheElements)
+			addElementCache.put(value, new SoftReference<AddElement>(newElement));
+
 		return newElement;
 	}
 
 	public static MultElement createMultElement(int value) {
 		MultElement newElement;
-		
-		if(multElementCache.containsKey(value)) {
-			if((newElement = multElementCache.get(value).get()) != null) {
-				System.out.println("Cache hit: " + newElement);
+
+		if (cacheElements && multElementCache.containsKey(value)) {
+			if ((newElement = multElementCache.get(value).get()) != null) {
+				//System.out.println("Cache hit: " + newElement);
 				assert newElement.getValue() == value;
 				return newElement;
 			}
 		}
-		
+
 		newElement = new MultElement(value);
-		multElementCache.put(value, new SoftReference<MultElement>(newElement));
+		if (cacheElements)
+			multElementCache.put(value, new SoftReference<MultElement>(newElement));
+
 		return newElement;
 	}
 
