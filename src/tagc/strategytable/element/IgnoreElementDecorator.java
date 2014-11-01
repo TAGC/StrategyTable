@@ -1,6 +1,6 @@
 package tagc.strategytable.element;
 
-public class IgnoreElementDecorator extends AbstractElement {
+class IgnoreElementDecorator extends AbstractElement {
 	
 	private final Element decoratee;
 
@@ -17,5 +17,10 @@ public class IgnoreElementDecorator extends AbstractElement {
 	@Override
 	public Element withoutDecoration() {
 		return decoratee;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("[Ignore element decorator] " + decoratee.toString());
 	}
 }

@@ -1,8 +1,13 @@
 package tagc.strategytable.element;
 
-public class MultElement extends AbstractElement {
+class MultElement extends AbstractElement {
 
 	public MultElement(int value) {
 		super(value);
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("Mult element (%s)", getValue());
 	}
 }

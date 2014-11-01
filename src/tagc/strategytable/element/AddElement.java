@@ -1,9 +1,14 @@
 package tagc.strategytable.element;
 
 
-public class AddElement extends AbstractElement {
+class AddElement extends AbstractElement {
 
 	public AddElement(int value) {
 		super(value);
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("Add element (%s)", getValue());
 	}
 }

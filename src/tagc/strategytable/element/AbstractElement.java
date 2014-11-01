@@ -1,6 +1,6 @@
 package tagc.strategytable.element;
 
-public abstract class AbstractElement implements Element {
+abstract class AbstractElement implements Element {
 
 	private final int value;
 

@@ -5,10 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import tagc.strategytable.element.AddElement;
 import tagc.strategytable.element.Element;
-import tagc.strategytable.element.IgnoreElementDecorator;
-import tagc.strategytable.element.MultElement;
+import tagc.strategytable.element.ElementFactory;
 import tagc.strategytable.operation.CountElementOperation;
 import tagc.strategytable.operation.FindTotalOperation;
 import tagc.strategytable.operation.Operation;
@@ -32,19 +30,11 @@ public class Main {
 
 		System.out.println(strategyTable);
 
-		System.out.println("Configured strategies");
-		for (Class<? extends Element> elementClass : elementClassSet) {
-			for (Class<? extends Operation<?, ?>> operationClass : operationClassSet) {
-				System.out.printf("%s + %s = %s\n", elementClass.getSimpleName(), operationClass.getSimpleName(),
-						strategyTable.getStrategyType(operationClass, elementClass).getSimpleName());
-			}
-		}
-
 		final List<Element> elements = new ArrayList<Element>();
-		elements.add(new AddElement(5));
-		elements.add(new MultElement(10));
-		elements.add(new AddElement(-20));
-		elements.add(new IgnoreElementDecorator(new MultElement(-5)));
+		elements.add(ElementFactory.createAddElement(5));
+		elements.add(ElementFactory.createMultElement(10));
+		elements.add(ElementFactory.createAddElement(-20));
+		elements.add(ElementFactory.addIgnoreDecoration(ElementFactory.createMultElement(10)));
 
 		final PureOperation<Integer> totalOperation = new FindTotalOperation();
 		final PureOperation<Integer> countOperation = new CountElementOperation();
@@ -65,14 +55,15 @@ public class Main {
 		 * Specifies all operations to ignore IgnoreElementDecorator elements
 		 * and lock that in.
 		 */
-		strategyTable.addNullElementStrategies(IgnoreElementDecorator.class);
-		strategyTable.setElementStrategiesLocked(IgnoreElementDecorator.class, true);
+		strategyTable.addNullElementStrategies(ElementFactory.getIgnoreElementDecoratorClass());
+		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
 
 		/*
 		 * Specifies strategies for 'FindTotalOperation' operations.
 		 */
-		strategyTable.addOperationStrategy(FindTotalOperation.class, AddElement.class, new AddTotalOperationStrategy());
-		strategyTable.addOperationStrategy(FindTotalOperation.class, MultElement.class,
+		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
+				new AddTotalOperationStrategy());
+		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
 				new MultTotalOperationStrategy());
 
 		/*
@@ -95,9 +86,9 @@ public class Main {
 	private static Set<Class<? extends Element>> getElementClassSet() {
 		final Set<Class<? extends Element>> elementClassSet = new HashSet<Class<? extends Element>>();
 
-		elementClassSet.add(AddElement.class);
-		elementClassSet.add(MultElement.class);
-		elementClassSet.add(IgnoreElementDecorator.class);
+		elementClassSet.add(ElementFactory.getAddElementClass());
+		elementClassSet.add(ElementFactory.getMultElementClass());
+		elementClassSet.add(ElementFactory.getIgnoreElementDecoratorClass());
 
 		return elementClassSet;
 	}
