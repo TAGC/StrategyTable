@@ -24,9 +24,11 @@ public class Main {
 	}
 
 	private static void demonstrate() {
-		final Set<Class<? extends Element>> elementClassSet = getElementClassSet();
+		final Set<Class<? extends Element>> baseElementClassSet = getBaseElementClassSet();
+		final Set<Class<? extends Element>> decoratedElementClassSet = getDecoratedElementClassSet();
 		final Set<Class<? extends Operation<?, ?>>> operationClassSet = getOperationClassSet();
-		final StrategyTable strategyTable = setupStrategyTable(elementClassSet, operationClassSet);
+		final StrategyTable strategyTable = setupStrategyTable(baseElementClassSet, decoratedElementClassSet,
+				operationClassSet);
 
 		System.out.println(strategyTable);
 
@@ -47,9 +49,10 @@ public class Main {
 	}
 
 	private static StrategyTable setupStrategyTable(Set<Class<? extends Element>> elementClassSet,
+			Set<Class<? extends Element>> decoratedElementClassSet,
 			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
-		final StrategyTable strategyTable = new StrategyTable(elementClassSet, operationClassSet,
-				StrategyTablePolicy.STRICT);
+		final StrategyTable strategyTable = new StrategyTable(elementClassSet, decoratedElementClassSet,
+				operationClassSet, StrategyTablePolicy.DEFAULT);
 
 		/*
 		 * Specifies all operations to ignore IgnoreElementDecorator elements
@@ -83,13 +86,18 @@ public class Main {
 		return operationClassSet;
 	}
 
-	private static Set<Class<? extends Element>> getElementClassSet() {
-		final Set<Class<? extends Element>> elementClassSet = new HashSet<Class<? extends Element>>();
+	private static Set<Class<? extends Element>> getBaseElementClassSet() {
+		final Set<Class<? extends Element>> baseElementClassSet = new HashSet<Class<? extends Element>>();
 
-		elementClassSet.add(ElementFactory.getAddElementClass());
-		elementClassSet.add(ElementFactory.getMultElementClass());
-		elementClassSet.add(ElementFactory.getIgnoreElementDecoratorClass());
+		baseElementClassSet.add(ElementFactory.getAddElementClass());
+		baseElementClassSet.add(ElementFactory.getMultElementClass());
+		return baseElementClassSet;
+	}
 
-		return elementClassSet;
+	private static Set<Class<? extends Element>> getDecoratedElementClassSet() {
+		final Set<Class<? extends Element>> decoratedElementClassSet = new HashSet<Class<? extends Element>>();
+
+		decoratedElementClassSet.add(ElementFactory.getIgnoreElementDecoratorClass());
+		return decoratedElementClassSet;
 	}
 }

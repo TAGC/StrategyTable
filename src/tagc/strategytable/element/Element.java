@@ -33,5 +33,4 @@ public interface Element {
 	 * @return an undecorated version of this node
 	 */
 	Element withoutDecoration();
-
 }

@@ -1,7 +1,9 @@
 package tagc.strategytable.table;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -26,16 +28,26 @@ public class StrategyTable {
 	 * A null strategy is initially configured to handle every combination of
 	 * element type and operation type.
 	 * 
-	 * @param elementClassSet
-	 *            a set containing the types of {@code Element} for this
+	 * @param baseElementClassSet
+	 *            a set containing the base types of {@code Element} for this
 	 *            strategy table to handle
+	 * @param decoratedElementClassSet
+	 *            a set containing the decorated types of {@code Element} for
+	 *            this strategy table to handle
 	 * @param operationClassSet
 	 *            a set containing the types of {@code Operation} for this
 	 *            strategy table to handle
+	 * @throws NullPointerException
+	 *             if any of the class sets are null or the table policy is
+	 *             null.
+	 * @throws IllegalArgumentException
+	 *             if {@code baseElementClassSet} and
+	 *             {@code decoratedElementClassSet} are not disjoint
 	 */
-	public StrategyTable(Set<Class<? extends Element>> elementClassSet,
+	public StrategyTable(Set<Class<? extends Element>> baseElementClassSet,
+			Set<Class<? extends Element>> decoratedElementClassSet,
 			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
-		this(elementClassSet, operationClassSet, StrategyTablePolicy.DEFAULT);
+		this(baseElementClassSet, decoratedElementClassSet, operationClassSet, StrategyTablePolicy.DEFAULT);
 	}
 
 	/**
@@ -48,24 +60,52 @@ public class StrategyTable {
 	 * combination of element type and operation type. The behaviour of this
 	 * strategy depends upon {@code tablePolicy}.
 	 * 
-	 * @param elementClassSet
-	 *            a set containing the types of {@code Element} for this
+	 * @param baseElementClassSet
+	 *            a set containing the base types of {@code Element} for this
 	 *            strategy table to handle
+	 * @param decoratedElementClassSet
+	 *            a set containing the decorated types of {@code Element} for
+	 *            this strategy table to handle
 	 * @param operationClassSet
 	 *            a set containing the types of {@code Operation} for this
 	 *            strategy table to handle
 	 * @param tablePolicy
 	 *            the policy that this table should use
-	 * 
+	 * @throws NullPointerException
+	 *             if any of the class sets are null or the table policy is
+	 *             null.
+	 * @throws IllegalArgumentException
+	 *             if {@code baseElementClassSet} and
+	 *             {@code decoratedElementClassSet} are not disjoint
 	 * @see StrategyTablePolicy
 	 */
-	public StrategyTable(Set<Class<? extends Element>> elementClassSet,
+	public StrategyTable(Set<Class<? extends Element>> baseElementClassSet,
+			Set<Class<? extends Element>> decoratedElementClassSet,
 			Set<Class<? extends Operation<?, ?>>> operationClassSet, StrategyTablePolicy tablePolicy) {
+
+		if (tablePolicy == null)
+			throw new NullPointerException("The table policy cannot be null");
+
+		if (baseElementClassSet == null)
+			throw new NullPointerException("The set of base element types cannot be null");
+
+		if (decoratedElementClassSet == null)
+			throw new NullPointerException("The set of decorated element types cannot be null");
+
+		if (operationClassSet == null)
+			throw new NullPointerException("The set of operation types cannot be null");
+
+		if (!Collections.disjoint(baseElementClassSet, decoratedElementClassSet))
+			throw new IllegalArgumentException("An element type cannot be both base and decorated");
+
 		table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>>();
 		elementLockStates = new HashMap<Class<? extends Element>, Boolean>();
 		operationLockStates = new HashMap<Class<? extends Operation<?, ?>>, Boolean>();
+		
+		final Set<Class<? extends Element>> combinedElementClassSet = new HashSet<Class<? extends Element>>(baseElementClassSet);
+		combinedElementClassSet.addAll(decoratedElementClassSet);
 
-		for (Class<? extends Element> elementClass : elementClassSet) {
+		for (Class<? extends Element> elementClass : combinedElementClassSet) {
 			elementLockStates.put(elementClass, false);
 
 			final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap;
@@ -73,7 +113,12 @@ public class StrategyTable {
 
 			for (Class<? extends Operation<?, ?>> operationClass : operationClassSet) {
 				operationLockStates.put(operationClass, false);
-				strategyMap.put(operationClass, tablePolicy.createDefaultStrategy());
+				
+				if(decoratedElementClassSet.contains(elementClass)) {
+					strategyMap.put(operationClass, tablePolicy.createDefaultDecoratedStrategy());
+				} else {
+					strategyMap.put(operationClass, tablePolicy.createDefaultBaseStrategy());
+				}
 			}
 
 			table.put(elementClass, strategyMap);
@@ -471,7 +516,7 @@ public class StrategyTable {
 			throw new IllegalArgumentException(
 					"There are no strategies defined to work with this type of operation for this element");
 
-		strategy.execute(operation, element);
+		strategy.execute(operation, element, this);
 	}
 
 	/**

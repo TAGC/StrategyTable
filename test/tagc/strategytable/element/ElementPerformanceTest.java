@@ -7,17 +7,21 @@ import java.util.concurrent.TimeUnit;
 
 public class ElementPerformanceTest {
 
-	// On my machine, elapsed time:
-	// - WITH caching    ~250 ms
-	// - WITHOUT caching ~4000 ms
-	// 16x speed up with caching
+	/* 
+	 * On my machine, elapsed time:
+	 * - WITH caching    ~250 ms
+	 * - WITHOUT caching ~4000 ms
+	 * 16x speed up with caching
+	 */
 	private static void createElements(boolean caching) {
 		final int ELEMENT_COUNT = 10000000;
 		final long startTime = System.nanoTime();
 		final Random random = new Random();
 
-		// Assume that almost all elements are instantiated with values between
-		// 0 and 100.
+		/* 
+		 * Assume that almost all elements are instantiated with values between
+		 * 0 and 100.
+		 */
 		final int maxNumber = 10;
 
 		List<Element> elements = new ArrayList<Element>();
