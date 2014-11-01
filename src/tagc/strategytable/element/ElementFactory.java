@@ -86,6 +86,10 @@ public class ElementFactory {
 	public static IgnoreElementDecorator addIgnoreDecoration(Element decoratee) {
 		return new IgnoreElementDecorator(decoratee);
 	}
+	
+	public static ReverseElementDecorator addReverseDecoration(Element decoratee) {
+		return new ReverseElementDecorator(decoratee);
+	}
 
 	public static Class<? extends AddElement> getAddElementClass() {
 		return AddElement.class;
@@ -97,5 +101,9 @@ public class ElementFactory {
 
 	public static Class<? extends Element> getIgnoreElementDecoratorClass() {
 		return IgnoreElementDecorator.class;
+	}
+	
+	public static Class<? extends Element> getReverseElementDecoratorClass() {
+		return ReverseElementDecorator.class;
 	}
 }

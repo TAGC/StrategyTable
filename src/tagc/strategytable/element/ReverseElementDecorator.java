@@ -1,17 +1,17 @@
 package tagc.strategytable.element;
 
-class IgnoreElementDecorator extends AbstractElement {
-	
+class ReverseElementDecorator extends AbstractElement {
+
 	private final Element decoratee;
 
-	public IgnoreElementDecorator(Element decoratee) {
+	public ReverseElementDecorator(Element decoratee) {
 		super(decoratee.getValue());
 		this.decoratee = decoratee;
 	}
 	
 	@Override
 	public int getValue() {
-		throw new AssertionError("This method should not have been called");
+		return -decoratee.getValue();
 	}
 	
 	@Override
@@ -26,6 +26,6 @@ class IgnoreElementDecorator extends AbstractElement {
 	
 	@Override
 	public String toString() {
-		return String.format("[Ignore] " + decoratee.toString());
+		return String.format("[Reverse] " + decoratee.toString());
 	}
 }

@@ -10,11 +10,13 @@ import java.util.Set;
 
 import tagc.strategytable.element.Element;
 import tagc.strategytable.operation.Operation;
+import tagc.strategytable.strategy.DeferStrategy;
 import tagc.strategytable.strategy.NullStrategy;
 import tagc.strategytable.strategy.Strategy;
 
 public class StrategyTable {
 
+	private final Set<Class<? extends Element>> decoratedElementClassSet;
 	private final Map<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>> table;
 	private final Map<Class<? extends Element>, Boolean> elementLockStates;
 	private final Map<Class<? extends Operation<?, ?>>, Boolean> operationLockStates;
@@ -98,9 +100,10 @@ public class StrategyTable {
 		if (!Collections.disjoint(baseElementClassSet, decoratedElementClassSet))
 			throw new IllegalArgumentException("An element type cannot be both base and decorated");
 
-		table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>>();
-		elementLockStates = new HashMap<Class<? extends Element>, Boolean>();
-		operationLockStates = new HashMap<Class<? extends Operation<?, ?>>, Boolean>();
+		this.table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>>();
+		this.elementLockStates = new HashMap<Class<? extends Element>, Boolean>();
+		this.operationLockStates = new HashMap<Class<? extends Operation<?, ?>>, Boolean>();
+		this.decoratedElementClassSet = decoratedElementClassSet;
 
 		final Set<Class<? extends Element>> combinedElementClassSet = new HashSet<Class<? extends Element>>(
 				baseElementClassSet);
@@ -397,11 +400,7 @@ public class StrategyTable {
 		if (elementType == null)
 			throw new NullPointerException("The element type cannot be null");
 
-		if (isStrategyLocked(operationType, elementType))
-			return false;
-
-		putOperationStrategy(operationType, elementType, StrategyTable.<T> createNullStrategy());
-		return true;
+		return putOperationStrategy(operationType, elementType, StrategyTable.<T> createNullStrategy());
 	}
 
 	/**
@@ -432,14 +431,13 @@ public class StrategyTable {
 	 * @see #isStrategyLocked(Class, Class)
 	 */
 	public <T extends Operation<?, ?>> boolean addNullOperationStrategies(Class<? extends T> operationType) {
-		boolean totalSuccess = true;
+		boolean success = true;
 
 		for (Class<? extends Element> elementType : table.keySet()) {
-			final boolean success = addNullOperationStrategy(operationType, elementType);
-			totalSuccess &= success;
+			success = addNullOperationStrategy(operationType, elementType) && success;
 		}
 
-		return totalSuccess;
+		return success;
 	}
 
 	/**
@@ -454,30 +452,86 @@ public class StrategyTable {
 	 * <p>
 	 * One example of where it may be appropriate to call this method on a type
 	 * of element that should be ignored by most or all operations.
+	 * <p>
+	 * Strategies will only be successfully registered if the existing strategy
+	 * associated with {@code operationType} and {@code elementType} is not
+	 * locked in.
 	 * 
 	 * @param elementType
 	 *            the {@code class} of {@code Element} to be ignored by
 	 *            operations
+	 * @return {@code true} if the strategy registration process succeeded for
+	 *         all types of operations that this strategy table is configured to
+	 *         work for, otherwise {@code false}
 	 * @throws NullPointerException
-	 *             {@code elementType} is {@code null}
+	 *             if {@code elementType} is {@code null}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 */
-	public void addNullElementStrategies(Class<? extends Element> elementType) {
+	public boolean addNullElementStrategies(Class<? extends Element> elementType) {
 		if (elementType == null)
 			throw new NullPointerException("The element type cannot be null");
 
-		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap;
-		strategyMap = getStrategyMap(elementType);
-
-		for (Class<? extends Operation<?, ?>> operationType : strategyMap.keySet()) {
-			putOperationStrategy(operationType, elementType, createNullStrategy());
+		boolean success = true;
+		for (Class<? extends Operation<?, ?>> operationType : getStrategyMap(elementType).keySet()) {
+			success = putOperationStrategy(operationType, elementType, createNullStrategy()) && success;
 		}
+
+		return success;
+	}
+
+	/**
+	 * Registers a defer strategy to be used to handle every operation on
+	 * elements of the element decorator type {@code elementDecoratorType}.
+	 * <p>
+	 * In other words, for any element {@code e} where
+	 * {@code e.getClass().equals(elementDecoratorType)}, successful
+	 * registration with this method will mean that any operation that attempts
+	 * to be applied to {@code e} will be applied to the {@code Element} that
+	 * {@code e} wraps instead. Later calls to {@link #addOperationStrategy} can
+	 * be used to replace defer strategies for certain operations if desired.
+	 * <p>
+	 * Strategies will only be successfully registered if the existing strategy
+	 * associated with {@code operationType} and {@code elementType} is not
+	 * locked in.
+	 * 
+	 * @param elementDecoratorType
+	 *            the {@code class} of the decorator-type {@code Element} to
+	 *            have operations deferred to the decoratee of
+	 * @return {@code true} if the strategy registration process succeeded for
+	 *         all types of operations that this strategy table is configured to
+	 *         work for, otherwise {@code false}
+	 * @throws NullPointerException
+	 *             if {@code elementType} is {@code null}
+	 * @throws IllegalArgumentException
+	 *             if {@code elementDecoratorType} has not been registered as
+	 *             the type of an element decorator
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 */
+	public boolean addDeferElementStrategies(Class<? extends Element> elementDecoratorType) {
+		if (elementDecoratorType == null)
+			throw new NullPointerException("The element type cannot be null");
+
+		if (!decoratedElementClassSet.contains(elementDecoratorType))
+			throw new IllegalArgumentException("Only elements of a decorator type can use defer strategies");
+
+		boolean success = true;
+		for (Class<? extends Operation<?, ?>> operationType : getStrategyMap(elementDecoratorType).keySet()) {
+			success = putOperationStrategy(operationType, elementDecoratorType, createDeferStrategy()) && success;
+		}
+
+		return success;
 	}
 
 	private static <T extends Operation<?, ?>> Strategy<T> createNullStrategy() {
 		return new NullStrategy<T>();
+	}
+
+	private static <T extends Operation<?, ?>> Strategy<T> createDeferStrategy() {
+		return new DeferStrategy<T>();
 	}
 
 	private Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> getStrategyMap(
@@ -502,11 +556,13 @@ public class StrategyTable {
 		strategyMap.put(operationType, strategy);
 	}
 
-	private <T extends Operation<?, ?>> void putOperationStrategy(Class<? extends T> operationType,
+	private <T extends Operation<?, ?>> boolean putOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType, Strategy<T> strategy) {
+		if (isStrategyLocked(operationType, elementType))
+			return false;
 
-		assert !isStrategyLocked(operationType, elementType) : "Illegal modification of strategy when locked";
 		putOperationStrategyHelper(getStrategyMap(elementType), operationType, strategy);
+		return true;
 	}
 
 	/*
@@ -628,7 +684,7 @@ public class StrategyTable {
 	 *             elements of type {@code elementType} and operations of type
 	 *             {@code operationType}
 	 */
-	public <T extends Operation<?, ?>> Class<? extends Strategy<T>> getStrategyType(Class<? extends T> operationType,
+	public <T extends Operation<?, ?>> Class<? extends Strategy<T>> getStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
 
 		if (operationType == null)

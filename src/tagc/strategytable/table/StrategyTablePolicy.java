@@ -35,11 +35,13 @@ public enum StrategyTablePolicy {
 	/**
 	 * This policy ensures that applying any operation to an element that no
 	 * strategy has been explicitly declared to handle will result in no action
-	 * being taken.
+	 * being taken. In this case, base element types and decorated element types
+	 * are treated equally; the default strategy in both cases will be to take
+	 * no action.
 	 * 
 	 * @author David
 	 */
-	IGNORE {
+	ISO {
 		@Override
 		public <T extends Operation<?, ?>> Strategy<T> createDefaultBaseStrategy() {
 			return new NullStrategy<T>();
