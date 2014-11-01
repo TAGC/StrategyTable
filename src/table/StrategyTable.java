@@ -12,15 +12,14 @@ import element.Element;
 
 public class StrategyTable {
 
-	@SuppressWarnings("rawtypes")
-	private final Map<Class<? extends Element>, Map<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>>> table;
+	private final Map<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>> table;
 
-	@SuppressWarnings("rawtypes")
 	public StrategyTable(Set<Class<? extends Element>> elementClassSet) {
-		table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>>>();
+		table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>>();
 
 		for (Class<? extends Element> elementClass : elementClassSet) {
-			table.put(elementClass, new HashMap<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>>());
+			table.put(elementClass,
+					new HashMap<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>());
 		}
 	}
 
@@ -49,8 +48,7 @@ public class StrategyTable {
 	public <I, O> void addOperationStrategy(Class<? extends Operation<I, O>> operationType,
 			Class<? extends Element> elementType, Strategy<? extends Operation<I, O>> strategy) {
 
-		@SuppressWarnings("rawtypes")
-		final Map<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>> elementMap = getElementMap(elementType);
+		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> elementMap = getElementMap(elementType);
 		elementMap.put(operationType, strategy);
 	}
 
@@ -76,15 +74,13 @@ public class StrategyTable {
 	public <I, O> void addNullOperationStrategy(Class<? extends Operation<I, O>> operationType,
 			Class<? extends Element> elementType) {
 
-		@SuppressWarnings("rawtypes")
-		final Map<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>> elementMap = getElementMap(elementType);
+		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> elementMap = getElementMap(elementType);
 		elementMap.put(operationType, new NullStrategy<Operation<I, O>>());
 	}
 
-	@SuppressWarnings("rawtypes")
-	private Map<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>> getElementMap(
+	private Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> getElementMap(
 			Class<? extends Element> elementType) {
-		Map<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>> elementMap = table.get(elementType);
+		Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> elementMap = table.get(elementType);
 
 		if (elementMap == null)
 			throw new IllegalArgumentException(
@@ -112,8 +108,8 @@ public class StrategyTable {
 	 *             strategy table's {@code policy} is set to {@code Strict}.
 	 */
 	public <I, O> void operate(Operation<I, O> operation, Element element) {
-		@SuppressWarnings("rawtypes")
-		Map<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>> map = table.get(element.getClass());
+
+		Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> map = table.get(element.getClass());
 
 		if (map == null)
 			throw new IllegalArgumentException("There are no operations defined to work with this type of element");
@@ -136,14 +132,12 @@ public class StrategyTable {
 	@Override
 	public String toString() {
 		String output = "";
-		for (@SuppressWarnings("rawtypes")
-		Entry<Class<? extends Element>, Map<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>>> elementMap : table
+		for (Entry<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>> elementMap : table
 				.entrySet()) {
 			output += "Element type: " + elementMap.getKey().getSimpleName() + "\n";
 
-			for (@SuppressWarnings("rawtypes")
-			Entry<Class<? extends Operation>, Strategy<? extends Operation<?, ?>>> strategyMap : elementMap.getValue()
-					.entrySet()) {
+			for (Entry<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap : elementMap
+					.getValue().entrySet()) {
 
 				output += String.format("\t%s -> %s\n", strategyMap.getKey().getSimpleName(), strategyMap.getValue());
 			}
