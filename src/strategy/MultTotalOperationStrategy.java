@@ -9,4 +9,9 @@ public class MultTotalOperationStrategy implements Strategy<FindTotalOperation> 
 	public void execute(FindTotalOperation operation, Element element) {
 		operation.store(operation.get()*element.getValue());
 	}
+	
+	@Override
+	public String toString() {
+		return "Multiplication strategy";
+	}
 }

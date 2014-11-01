@@ -9,4 +9,9 @@ public class CountElementOperationStrategy implements Strategy<CountElementOpera
 	public void execute(CountElementOperation operation, Element element) {
 		operation.store(operation.get()+1);
 	}
+	
+	@Override
+	public String toString() {
+		return "Counting strategy";
+	}
 }

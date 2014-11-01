@@ -3,11 +3,16 @@ package strategy;
 import operation.Operation;
 import element.Element;
 
-public class NullStrategy implements Strategy<Operation<?, ?>> {
+
+public class NullStrategy<T extends Operation<?, ?>> implements Strategy<T> {
 
 	@Override
-	public void execute(Operation<?, ?> operation, Element element) {
+	public void execute(T operation, Element element) {
 		// Do nothing.
 	}
-
+	
+	@Override
+	public String toString() {
+		return "Generic null strategy";
+	}
 }
