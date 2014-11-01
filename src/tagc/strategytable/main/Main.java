@@ -17,6 +17,7 @@ import tagc.strategytable.strategy.AddTotalOperationStrategy;
 import tagc.strategytable.strategy.CountElementOperationStrategy;
 import tagc.strategytable.strategy.MultTotalOperationStrategy;
 import tagc.strategytable.table.StrategyTable;
+import tagc.strategytable.table.StrategyTablePolicy;
 
 public class Main {
 
@@ -57,7 +58,8 @@ public class Main {
 
 	private static StrategyTable setupStrategyTable(Set<Class<? extends Element>> elementClassSet,
 			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
-		final StrategyTable strategyTable = new StrategyTable(elementClassSet, operationClassSet);
+		final StrategyTable strategyTable = new StrategyTable(elementClassSet, operationClassSet,
+				StrategyTablePolicy.STRICT);
 
 		/*
 		 * Specifies all operations to ignore IgnoreElementDecorator elements

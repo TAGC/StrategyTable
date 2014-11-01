@@ -35,6 +35,32 @@ public class StrategyTable {
 	 */
 	public StrategyTable(Set<Class<? extends Element>> elementClassSet,
 			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
+		this(elementClassSet, operationClassSet, StrategyTablePolicy.DEFAULT);
+	}
+
+	/**
+	 * Constructs and configures a {@code StrategyTable} which can associate
+	 * strategies for any element of a type provided within
+	 * {@code elementClassSet} and any operation of a type provided within
+	 * {@code operationClassSet}.
+	 * <p>
+	 * A default strategy will be initially configured to handle every
+	 * combination of element type and operation type. The behaviour of this
+	 * strategy depends upon {@code tablePolicy}.
+	 * 
+	 * @param elementClassSet
+	 *            a set containing the types of {@code Element} for this
+	 *            strategy table to handle
+	 * @param operationClassSet
+	 *            a set containing the types of {@code Operation} for this
+	 *            strategy table to handle
+	 * @param tablePolicy
+	 *            the policy that this table should use
+	 * 
+	 * @see StrategyTablePolicy
+	 */
+	public StrategyTable(Set<Class<? extends Element>> elementClassSet,
+			Set<Class<? extends Operation<?, ?>>> operationClassSet, StrategyTablePolicy tablePolicy) {
 		table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>>();
 		elementLockStates = new HashMap<Class<? extends Element>, Boolean>();
 		operationLockStates = new HashMap<Class<? extends Operation<?, ?>>, Boolean>();
@@ -47,7 +73,7 @@ public class StrategyTable {
 
 			for (Class<? extends Operation<?, ?>> operationClass : operationClassSet) {
 				operationLockStates.put(operationClass, false);
-				strategyMap.put(operationClass, createNullStrategy());
+				strategyMap.put(operationClass, tablePolicy.createDefaultStrategy());
 			}
 
 			table.put(elementClass, strategyMap);
@@ -510,15 +536,15 @@ public class StrategyTable {
 
 	@Override
 	public String toString() {
-		String output = "";
+		String output = "Strategy table\n";
 		for (Entry<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>> elementMap : table
 				.entrySet()) {
-			output += "Element type: " + elementMap.getKey().getSimpleName() + "\n";
+			output += "\nElement type: " + elementMap.getKey().getSimpleName() + "\n";
 
 			for (Entry<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap : elementMap
 					.getValue().entrySet()) {
 
-				output += String.format("\t%s -> %s\n", strategyMap.getKey().getSimpleName(), strategyMap.getValue());
+				output += String.format("\t* %s -> %s\n", strategyMap.getKey().getSimpleName(), strategyMap.getValue());
 			}
 		}
 
