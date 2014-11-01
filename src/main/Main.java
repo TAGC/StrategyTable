@@ -7,6 +7,7 @@ import java.util.Set;
 
 import operation.CountElementOperation;
 import operation.FindTotalOperation;
+import operation.Operation;
 import operation.PureOperation;
 import strategy.AddTotalOperationStrategy;
 import strategy.CountElementOperationStrategy;
@@ -25,55 +26,72 @@ public class Main {
 
 	private static void demonstrate() {
 		final Set<Class<? extends Element>> elementClassSet = getElementClassSet();
-		final StrategyTable strategyTable = setupStrategyTable(elementClassSet);
-		
+		final Set<Class<? extends Operation<?, ?>>> operationClassSet = getOperationClassSet();
+		final StrategyTable strategyTable = setupStrategyTable(elementClassSet, operationClassSet);
+
 		System.out.println(strategyTable);
-		
+
+		for (Class<? extends Element> elementClass : elementClassSet) {
+			for (Class<? extends Operation<?, ?>> operationClass : operationClassSet) {
+				System.out.printf("%s + %s = %s\n", elementClass.getSimpleName(), operationClass.getSimpleName(),
+						strategyTable.getStrategyType(operationClass, elementClass).getSimpleName());
+			}
+		}
+
 		final List<Element> elements = new ArrayList<Element>();
 		elements.add(new AddElement(5));
 		elements.add(new MultElement(10));
 		elements.add(new AddElement(-20));
 		elements.add(new IgnoreElementDecorator(new MultElement(-5)));
-		
+
 		final PureOperation<Integer> totalOperation = new FindTotalOperation();
 		final PureOperation<Integer> countOperation = new CountElementOperation();
-		for(Element e : elements) {
+		for (Element e : elements) {
 			strategyTable.operate(totalOperation, e);
 			strategyTable.operate(countOperation, e);
 		}
-		
+
 		System.out.println("Total: " + totalOperation.get());
 		System.out.println("Element count: " + countOperation.get());
 	}
-	
-	private static StrategyTable setupStrategyTable(Set<Class<? extends Element>> elementClassSet) {
-		final StrategyTable strategyTable = new StrategyTable(elementClassSet);
+
+	private static StrategyTable setupStrategyTable(Set<Class<? extends Element>> elementClassSet,
+			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
+		final StrategyTable strategyTable = new StrategyTable(elementClassSet, operationClassSet);
 
 		/*
 		 * Total finding operation.
 		 */
-		strategyTable.addOperationStrategy(FindTotalOperation.class, AddElement.class,
-				new AddTotalOperationStrategy());
+		strategyTable.addOperationStrategy(FindTotalOperation.class, AddElement.class, new AddTotalOperationStrategy());
 
 		strategyTable.addOperationStrategy(FindTotalOperation.class, MultElement.class,
 				new MultTotalOperationStrategy());
 
 		strategyTable.addNullOperationStrategy(FindTotalOperation.class, IgnoreElementDecorator.class);
-		
+
 		/*
 		 * Counting operation.
 		 */
 		strategyTable.addOperationStrategy(CountElementOperation.class, AddElement.class,
 				new CountElementOperationStrategy());
-		
+
 		strategyTable.addOperationStrategy(CountElementOperation.class, MultElement.class,
 				new CountElementOperationStrategy());
-		
+
 		strategyTable.addNullOperationStrategy(CountElementOperation.class, IgnoreElementDecorator.class);
-		
+
 		return strategyTable;
 	}
-	
+
+	private static Set<Class<? extends Operation<?, ?>>> getOperationClassSet() {
+		final Set<Class<? extends Operation<?, ?>>> operationClassSet = new HashSet<Class<? extends Operation<?, ?>>>();
+
+		operationClassSet.add(FindTotalOperation.class);
+		operationClassSet.add(CountElementOperation.class);
+
+		return operationClassSet;
+	}
+
 	private static Set<Class<? extends Element>> getElementClassSet() {
 		final Set<Class<? extends Element>> elementClassSet = new HashSet<Class<? extends Element>>();
 

@@ -14,12 +14,19 @@ public class StrategyTable {
 
 	private final Map<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>> table;
 
-	public StrategyTable(Set<Class<? extends Element>> elementClassSet) {
+	public StrategyTable(Set<Class<? extends Element>> elementClassSet,
+			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
 		table = new HashMap<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>>();
 
 		for (Class<? extends Element> elementClass : elementClassSet) {
-			table.put(elementClass,
-					new HashMap<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>());
+			final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap;
+			strategyMap = new HashMap<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>();
+
+			for (Class<? extends Operation<?, ?>> operationClass : operationClassSet) {
+				strategyMap.put(operationClass, createNullStrategy());
+			}
+
+			table.put(elementClass, strategyMap);
 		}
 	}
 
@@ -44,12 +51,15 @@ public class StrategyTable {
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             operations of type {@code operationType}
 	 */
-	public <I, O> void addOperationStrategy(Class<? extends Operation<I, O>> operationType,
-			Class<? extends Element> elementType, Strategy<? extends Operation<I, O>> strategy) {
+	public <T extends Operation<?, ?>> void addOperationStrategy(Class<? extends T> operationType,
+			Class<? extends Element> elementType, Strategy<T> strategy) {
 
-		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> elementMap = getElementMap(elementType);
-		elementMap.put(operationType, strategy);
+		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap = getStrategyMap(elementType);
+		putOperationStrategy(strategyMap, operationType, strategy);
 	}
 
 	/**
@@ -69,24 +79,65 @@ public class StrategyTable {
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             operations of type {@code operationType}
 	 */
-
 	public <I, O> void addNullOperationStrategy(Class<? extends Operation<I, O>> operationType,
 			Class<? extends Element> elementType) {
 
-		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> elementMap = getElementMap(elementType);
-		elementMap.put(operationType, new NullStrategy<Operation<I, O>>());
+		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap = getStrategyMap(elementType);
+		putOperationStrategy(strategyMap, operationType, StrategyTable.<I, O> createNullStrategy());
 	}
 
-	private Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> getElementMap(
+	private static <I, O> Strategy<Operation<I, O>> createNullStrategy() {
+		return new NullStrategy<Operation<I, O>>();
+	}
+
+	private Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> getStrategyMap(
 			Class<? extends Element> elementType) {
-		Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> elementMap = table.get(elementType);
-
-		if (elementMap == null)
+		if (!table.containsKey(elementType))
 			throw new IllegalArgumentException(
-					"This strategy table has not been configured to support elements of type " + elementType);
+					"This strategy table has not been configured to support elements of type "
+							+ elementType.getSimpleName());
 
-		return elementMap;
+		return table.get(elementType);
+	}
+
+	private <T extends Operation<?, ?>> void putOperationStrategy(
+			Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap,
+			Class<? extends T> operationType, Strategy<T> strategy) {
+
+		if (!strategyMap.containsKey(operationType))
+			throw new IllegalArgumentException(
+					"This strategy table has not been configured to support operations of type "
+							+ operationType.getSimpleName());
+
+		strategyMap.put(operationType, strategy);
+	}
+
+	/*
+	 * We know that this is a safe cast because #putOperationStrategy is
+	 * typesafe and is the only way a strategy can be associated with an
+	 * operation.
+	 */
+	@SuppressWarnings("unchecked")
+	private <T extends Operation<?, ?>> Strategy<T> getOperationStrategy(
+			Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap,
+			Class<? extends T> operationType) {
+
+		if (!strategyMap.containsKey(operationType))
+			throw new IllegalArgumentException(
+					"This strategy table has not been configured to support operations of type "
+							+ operationType.getSimpleName());
+
+		return (Strategy<T>) strategyMap.get(operationType);
+	}
+
+	private <T extends Operation<?, ?>> Strategy<T> getOperationElementStrategy(Class<? extends T> operationType,
+			Class<? extends Element> elementType) {
+
+		return getOperationStrategy(getStrategyMap(elementType), operationType);
 	}
 
 	/**
@@ -115,18 +166,55 @@ public class StrategyTable {
 			throw new IllegalArgumentException("There are no operations defined to work with this type of element");
 
 		/*
-		 * We know that this is a safe cast because #addOperationStrategy is
-		 * typesafe and is the only way a strategy can be associated with an
-		 * operation.
+		 * It's safe to make this cast because #getClass() will return the
+		 * runtime type of the operation which we can guarantee the type of.
 		 */
 		@SuppressWarnings("unchecked")
-		Strategy<Operation<I, O>> strategy = (Strategy<Operation<I, O>>) map.get(operation.getClass());
+		final Class<? extends Operation<I, O>> operationType = (Class<? extends Operation<I, O>>) operation.getClass();
+		final Class<? extends Element> elementType = element.getClass();
+		Strategy<Operation<I, O>> strategy = getOperationElementStrategy(operationType, elementType);
 
 		if (strategy == null)
 			throw new IllegalArgumentException(
 					"There are no strategies defined to work with this type of operation for this element");
 
 		strategy.execute(operation, element);
+	}
+
+	/**
+	 * Returns the class of the {@code Strategy} object that is specified to
+	 * handle a given type of {@code Operation} and {@code Element}.
+	 * 
+	 * @param operationType
+	 *            the type of {@code Operation}
+	 * @param elementType
+	 *            the type of {@code Element}
+	 * @return the runtime type of the {@code Strategy} object corresponding to
+	 *         {@code operationType} and {@code elementType}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             operations of type {@code operationType}
+	 */
+	public <T extends Operation<?, ?>> Class<? extends Strategy<T>> getStrategyType(Class<? extends T> operationType,
+			Class<? extends Element> elementType) {
+
+		return getStrategyTypeHelper(operationType, elementType);
+	}
+
+	/*
+	 * It's safe to make this cast because we know #getOperationElementStrategy
+	 * will return a Strategy<T> and getClass() returns the runtime type of the
+	 * strategy object.
+	 */
+	@SuppressWarnings("unchecked")
+	private <T extends Operation<?, ?>> Class<? extends Strategy<T>> getStrategyTypeHelper(
+			Class<? extends T> operationType, Class<? extends Element> elementType) {
+
+		final Strategy<T> strategy = getOperationElementStrategy(operationType, elementType);
+		return (Class<? extends Strategy<T>>) strategy.getClass();
 	}
 
 	@Override
