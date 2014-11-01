@@ -33,6 +33,7 @@ public class Main {
 		elements.add(new AddElement(5));
 		elements.add(new MultElement(10));
 		elements.add(new AddElement(-20));
+		elements.add(new IgnoreElementDecorator(new MultElement(-5)));
 		
 		final PureOperation<Integer> totalOperation = new FindTotalOperation();
 		final PureOperation<Integer> countOperation = new CountElementOperation();
