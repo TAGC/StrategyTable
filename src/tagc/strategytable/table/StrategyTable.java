@@ -84,15 +84,15 @@ public class StrategyTable {
 	 *             if this strategy table has not been configured to support
 	 *             operations of type {@code operationType}
 	 */
-	public <I, O> void addNullOperationStrategy(Class<? extends Operation<I, O>> operationType,
+	public <T extends Operation<?, ?>> void addNullOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
 
 		final Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap = getStrategyMap(elementType);
-		putOperationStrategy(strategyMap, operationType, StrategyTable.<I, O> createNullStrategy());
+		putOperationStrategy(strategyMap, operationType, StrategyTable.<T> createNullStrategy());
 	}
 
-	private static <I, O> Strategy<Operation<I, O>> createNullStrategy() {
-		return new NullStrategy<Operation<I, O>>();
+	private static <T extends Operation<?, ?>> Strategy<T> createNullStrategy() {
+		return new NullStrategy<T>();
 	}
 
 	private Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> getStrategyMap(
