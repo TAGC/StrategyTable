@@ -25,24 +25,42 @@ public class Main {
 	private static final Pattern EXECUTE_PATTERN = Pattern.compile("^\\s*go\\s*$", Pattern.CASE_INSENSITIVE);
 	private static final Pattern QUIT_PATTERN = Pattern.compile("^\\s*quit\\s*$", Pattern.CASE_INSENSITIVE);
 	private static final Pattern INFO_PATTERN = Pattern.compile("^\\s*info\\s*$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern USE_ILLEGAL_STRATEGY_TABLE = Pattern.compile("^\\s*st illegal\\s*$",
+			Pattern.CASE_INSENSITIVE);
+	private static final Pattern USE_NULL_STRATEGY_TABLE = Pattern.compile("^\\s*st no defer\\s*$",
+			Pattern.CASE_INSENSITIVE);
 	private static final Pattern USE_DEFAULT_STRATEGY_TABLE = Pattern.compile("^\\s*st default\\s*$",
 			Pattern.CASE_INSENSITIVE);
-	private static final Pattern USE_ISO_STRATEGY_TABLE = Pattern.compile("^\\s*st iso\\s*$",
-			Pattern.CASE_INSENSITIVE);
-	private static final Pattern USE_ILLEGAL_STRATEGY_TABLE = Pattern.compile("^\\s*st illegal\\s*$",
+	private static final Pattern USE_BYPASS_STRATEGY_TABLE = Pattern.compile("^\\s*st bypass\\s*$",
 			Pattern.CASE_INSENSITIVE);
 	private static final Pattern CREATE_ADD_ELEMENT_PATTERN = Pattern.compile("^add\\s*(?<value>\\d+)\\s*$",
 			Pattern.CASE_INSENSITIVE);
 	private static final Pattern CREATE_MULT_ELEMENT_PATTERN = Pattern.compile("^mult\\s*(?<value>\\d+)\\s*$",
 			Pattern.CASE_INSENSITIVE);
-	private static final Pattern INSTALL_IGNORE_DECORATOR_PATTERN = Pattern.compile(
-			"^ignore\\s*(?<index>\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
-	private static final Pattern INSTALL_REVERSE_DECORATOR_PATTERN = Pattern.compile(
-			"^reverse\\s*(?<index>\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern INSTALL_IGNORE_DECORATOR_PATTERN = Pattern.compile("^ignore\\s*(?<index>\\d+)\\s*$",
+			Pattern.CASE_INSENSITIVE);
+	private static final Pattern INSTALL_REVERSE_DECORATOR_PATTERN = Pattern.compile("^reverse\\s*(?<index>\\d+)\\s*$",
+			Pattern.CASE_INSENSITIVE);
 
 	private static final Scanner SCANNER = new Scanner(System.in);
 
 	private enum StrategyTableType {
+		ILLEGAL {
+			@Override
+			StrategyTable createTable(Set<Class<? extends Element>> baseElementClassSet,
+					Set<Class<? extends Element>> decoratedElementClassSet,
+					Set<Class<? extends Operation<?, ?>>> operationClassSet) {
+				return setupIllegalStrategyTable(baseElementClassSet, decoratedElementClassSet, operationClassSet);
+			}
+		},
+		NULL {
+			@Override
+			StrategyTable createTable(Set<Class<? extends Element>> baseElementClassSet,
+					Set<Class<? extends Element>> decoratedElementClassSet,
+					Set<Class<? extends Operation<?, ?>>> operationClassSet) {
+				return setupNullStrategyTable(baseElementClassSet, decoratedElementClassSet, operationClassSet);
+			}
+		},
 		DEFAULT {
 			@Override
 			StrategyTable createTable(Set<Class<? extends Element>> baseElementClassSet,
@@ -51,20 +69,12 @@ public class Main {
 				return setupDefaultStrategyTable(baseElementClassSet, decoratedElementClassSet, operationClassSet);
 			}
 		},
-		ISO {
+		BYPASS {
 			@Override
 			StrategyTable createTable(Set<Class<? extends Element>> baseElementClassSet,
 					Set<Class<? extends Element>> decoratedElementClassSet,
 					Set<Class<? extends Operation<?, ?>>> operationClassSet) {
-				return setupIsoStrategyTable(baseElementClassSet, decoratedElementClassSet, operationClassSet);
-			}
-		},
-		ILLEGAL {
-			@Override
-			StrategyTable createTable(Set<Class<? extends Element>> baseElementClassSet,
-					Set<Class<? extends Element>> decoratedElementClassSet,
-					Set<Class<? extends Operation<?, ?>>> operationClassSet) {
-				return setupIllegalStrategyTable(baseElementClassSet, decoratedElementClassSet, operationClassSet);
+				return setupBypassStrategyTable(baseElementClassSet, decoratedElementClassSet, operationClassSet);
 			}
 		};
 
@@ -87,9 +97,7 @@ public class Main {
 				+ " interface and all concrete visitors.");
 
 		System.out.println("\nThis demonstration consists of an element hierarchy consisting of two base"
-				+ " element types and one element decorator:\n"
-				+ "\tAddElement (base)\n"
-				+ "\tMultElement (base)\n"
+				+ " element types and one element decorator:\n" + "\tAddElement (base)\n" + "\tMultElement (base)\n"
 				+ "\tIgnoreElementDecorator (decorator)\n"
 				+ "An element in this case is an immutable object that can store an integer value.");
 
@@ -101,12 +109,12 @@ public class Main {
 				+ "\t'mult <<integer value>>' to add a new MultElement with the given value\n"
 				+ "\t'ignore <<index>>' to decorate the element at the given index with an IgnoreElementDecorator\n"
 				+ "\t'reverse <<index>>' to decorate the element at the given index with a ReverseElementDecorator\n"
-				+ "\t'st default' to choose the default strategy table\n"
-				+ "\t'st iso' to choose the iso strategy table\n"
 				+ "\t'st illegal' to choose the illegal strategy table\n"
+				+ "\t'st null' to choose the null strategy table\n"
+				+ "\t'st default' to choose the default strategy table\n"
+				+ "\t'st bypass' to choose the bypass strategy table\n"
 				+ "\t'info' to print out the current setup\n"
-				+ "\t'go' to run the demonstration with the current setup\n"
-				+ "\t'quit' to close this application\n"
+				+ "\t'go' to run the demonstration with the current setup\n" + "\t'quit' to close this application\n"
 				+ "All commands are case insensitive.");
 
 		System.out.println("\nPlease enter your first command:");
@@ -135,20 +143,26 @@ public class Main {
 			execute(elements, tableType);
 		}
 
+		else if ((m = USE_ILLEGAL_STRATEGY_TABLE.matcher(input)) != null && m.matches()) {
+			final StrategyTableType newTableType = StrategyTableType.ILLEGAL;
+			System.out.println("Setting strategy table: " + newTableType);
+			interpretInput(SCANNER.nextLine(), elements, newTableType);
+		}
+		
+		else if ((m = USE_NULL_STRATEGY_TABLE.matcher(input)) != null && m.matches()) {
+			final StrategyTableType newTableType = StrategyTableType.NULL;
+			System.out.println("Setting strategy table: " + newTableType);
+			interpretInput(SCANNER.nextLine(), elements, newTableType);
+		}
+
 		else if ((m = USE_DEFAULT_STRATEGY_TABLE.matcher(input)) != null && m.matches()) {
 			final StrategyTableType newTableType = StrategyTableType.DEFAULT;
 			System.out.println("Setting strategy table: " + newTableType);
 			interpretInput(SCANNER.nextLine(), elements, newTableType);
 		}
 
-		else if ((m = USE_ISO_STRATEGY_TABLE.matcher(input)) != null && m.matches()) {
-			final StrategyTableType newTableType = StrategyTableType.ISO;
-			System.out.println("Setting strategy table: " + newTableType);
-			interpretInput(SCANNER.nextLine(), elements, newTableType);
-		}
-
-		else if ((m = USE_ILLEGAL_STRATEGY_TABLE.matcher(input)) != null && m.matches()) {
-			final StrategyTableType newTableType = StrategyTableType.ILLEGAL;
+		else if ((m = USE_BYPASS_STRATEGY_TABLE.matcher(input)) != null && m.matches()) {
+			final StrategyTableType newTableType = StrategyTableType.BYPASS;
 			System.out.println("Setting strategy table: " + newTableType);
 			interpretInput(SCANNER.nextLine(), elements, newTableType);
 		}
@@ -157,7 +171,7 @@ public class Main {
 			final int value = Integer.parseInt(m.group("value"));
 			final Element newElement = ElementFactory.createAddElement(value);
 			elements.add(newElement);
-			System.out.println("Added " + newElement);
+			System.out.println("Added " + newElement + "\nNew elements: " + elements);
 			interpretInput(SCANNER.nextLine(), elements, tableType);
 		}
 
@@ -165,13 +179,13 @@ public class Main {
 			final int value = Integer.parseInt(m.group("value"));
 			final Element newElement = ElementFactory.createMultElement(value);
 			elements.add(newElement);
-			System.out.println("Added " + newElement);
+			System.out.println("Added " + newElement + "\nNew elements: " + elements);
 			interpretInput(SCANNER.nextLine(), elements, tableType);
 		}
 
 		else if ((m = INSTALL_IGNORE_DECORATOR_PATTERN.matcher(input)) != null && m.matches()) {
 			final int index = Integer.parseInt(m.group("index"));
-			if(0 < index || index >= elements.size()) {
+			if (index < 0 || index >= elements.size()) {
 				System.out.printf("%d is not a valid index (elements: %s)\n", index, elements);
 				interpretInput(SCANNER.nextLine(), elements, tableType);
 			} else {
@@ -184,7 +198,7 @@ public class Main {
 
 		else if ((m = INSTALL_REVERSE_DECORATOR_PATTERN.matcher(input)) != null && m.matches()) {
 			final int index = Integer.parseInt(m.group("index"));
-			if(0 < index || index >= elements.size()) {
+			if (index < 0 || index >= elements.size()) {
 				System.out.printf("%d is not a valid index (elements: %s)\n", index, elements);
 				interpretInput(SCANNER.nextLine(), elements, tableType);
 			} else {
@@ -217,7 +231,7 @@ public class Main {
 		final Set<Class<? extends Operation<?, ?>>> operationClassSet = getOperationClassSet();
 		final StrategyTable table = tableType.createTable(baseElementClassSet, decoratedElementClassSet,
 				operationClassSet);
-		
+
 		printInfo(elements, tableType);
 		System.out.println(table);
 
@@ -266,6 +280,74 @@ public class Main {
 	// Strategy Table Configurations
 	// ================================================================================
 
+	private static StrategyTable setupIllegalStrategyTable(Set<Class<? extends Element>> elementClassSet,
+			Set<Class<? extends Element>> decoratedElementClassSet,
+			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
+		final StrategyTable strategyTable = new StrategyTable(elementClassSet, decoratedElementClassSet,
+				operationClassSet, StrategyTablePolicy.STRICT);
+
+		/*
+		 * Locks in current strategy which is illegally left unspecified.
+		 */
+		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
+
+		/*
+		 * We omit explicit registration of strategies for
+		 * ReverseElementDecorator. This is illegal.
+		 */
+		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
+
+		/*
+		 * Specifies strategies for 'FindTotalOperation' operations.
+		 */
+		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
+				new AddTotalOperationStrategy());
+		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
+				new MultTotalOperationStrategy());
+
+		/*
+		 * Specifies strategies for 'CountElementOperation' operations.
+		 */
+		strategyTable.addOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
+
+		return strategyTable;
+	}
+
+	private static StrategyTable setupNullStrategyTable(Set<Class<? extends Element>> elementClassSet,
+			Set<Class<? extends Element>> decoratedElementClassSet,
+			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
+		final StrategyTable strategyTable = new StrategyTable(elementClassSet, decoratedElementClassSet,
+				operationClassSet, StrategyTablePolicy.NULL);
+
+		/*
+		 * Locks in current strategy but does not specify a strategy to use
+		 * (which is legal in this case).
+		 */
+		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
+
+		/*
+		 * We omit explicit registration of strategies for
+		 * ReverseElementDecorator. This will cause operations to ignore
+		 * elements wrapped in this decorator.
+		 */
+		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
+
+		/*
+		 * Specifies strategies for 'FindTotalOperation' operations.
+		 */
+		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
+				new AddTotalOperationStrategy());
+		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
+				new MultTotalOperationStrategy());
+
+		/*
+		 * Specifies strategies for 'CountElementOperation' operations.
+		 */
+		strategyTable.addOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
+
+		return strategyTable;
+	}
+
 	private static StrategyTable setupDefaultStrategyTable(Set<Class<? extends Element>> elementClassSet,
 			Set<Class<? extends Element>> decoratedElementClassSet,
 			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
@@ -278,10 +360,11 @@ public class Main {
 		 */
 		strategyTable.addNullElementStrategies(ElementFactory.getIgnoreElementDecoratorClass());
 		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
-		
+
 		/*
-		 * We omit explicit registration of strategies for ReverseElementDecorator. This will cause
-		 * strategies to be applied to the wrapped element by default, as we would like.
+		 * We omit explicit registration of strategies for
+		 * ReverseElementDecorator. This will cause strategies to be applied to
+		 * the wrapped element by default, as we would like.
 		 */
 		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
 
@@ -301,22 +384,20 @@ public class Main {
 		return strategyTable;
 	}
 
-	private static StrategyTable setupIsoStrategyTable(Set<Class<? extends Element>> elementClassSet,
+	private static StrategyTable setupBypassStrategyTable(Set<Class<? extends Element>> elementClassSet,
 			Set<Class<? extends Element>> decoratedElementClassSet,
 			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
 		final StrategyTable strategyTable = new StrategyTable(elementClassSet, decoratedElementClassSet,
-				operationClassSet, StrategyTablePolicy.ISO);
+				operationClassSet, StrategyTablePolicy.BYPASS);
 
 		/*
-		 * Locks in current strategy but does not specify a strategy to use
-		 * (which is legal in this case).
+		 * We omit explicit registration of strategies for
+		 * IgnoreElementDecorator and ReverseElementDecorator. This will cause
+		 * strategies to be applied to the wrapped element using the strategy
+		 * appropriate for the wrapped element i.e. the decorator will be
+		 * bypassed completely.
 		 */
 		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
-		
-		/*
-		 * We omit explicit registration of strategies for ReverseElementDecorator. This will cause
-		 * operations to ignore elements wrapped in this decorator.
-		 */
 		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
 
 		/*
@@ -335,35 +416,4 @@ public class Main {
 		return strategyTable;
 	}
 
-	private static StrategyTable setupIllegalStrategyTable(Set<Class<? extends Element>> elementClassSet,
-			Set<Class<? extends Element>> decoratedElementClassSet,
-			Set<Class<? extends Operation<?, ?>>> operationClassSet) {
-		final StrategyTable strategyTable = new StrategyTable(elementClassSet, decoratedElementClassSet,
-				operationClassSet, StrategyTablePolicy.STRICT);
-
-		/*
-		 * Locks in current strategy which is illegally left unspecified.
-		 */
-		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
-		
-		/*
-		 * We omit explicit registration of strategies for ReverseElementDecorator. This is illegal.
-		 */
-		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
-
-		/*
-		 * Specifies strategies for 'FindTotalOperation' operations.
-		 */
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
-				new AddTotalOperationStrategy());
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
-				new MultTotalOperationStrategy());
-
-		/*
-		 * Specifies strategies for 'CountElementOperation' operations.
-		 */
-		strategyTable.addOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
-
-		return strategyTable;
-	}
 }

@@ -21,7 +21,7 @@ class IgnoreElementDecorator extends AbstractElement {
 
 	@Override
 	public Element withoutDecoration() {
-		return decoratee;
+		return decoratee.withoutDecoration();
 	}
 	
 	@Override

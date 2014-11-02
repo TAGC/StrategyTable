@@ -1,9 +1,10 @@
 package tagc.strategytable.table;
 
 import tagc.strategytable.operation.Operation;
-import tagc.strategytable.strategy.DeferStrategy;
 import tagc.strategytable.strategy.NullStrategy;
+import tagc.strategytable.strategy.SubstituteStrategy;
 import tagc.strategytable.strategy.Strategy;
+import tagc.strategytable.strategy.BypassStrategy;
 import tagc.strategytable.strategy.UnimplementedStrategy;
 
 /**
@@ -41,7 +42,7 @@ public enum StrategyTablePolicy {
 	 * 
 	 * @author David
 	 */
-	ISO {
+	NULL {
 		@Override
 		public <T extends Operation<?, ?>> Strategy<T> createDefaultBaseStrategy() {
 			return new NullStrategy<T>();
@@ -61,7 +62,10 @@ public enum StrategyTablePolicy {
 	 * <li>{@link #createDefaultBaseStrategy} will return a strategy that does
 	 * nothing</li>
 	 * <li>{@link #createDefaultDecoratedStrategy} will return a strategy that
-	 * defers application of an operation to its decoratee</li>
+	 * applies the decorator to its decoratee's corresponding strategy. In other
+	 * words, the ultimately chosen strategy will be based on the
+	 * <i>decoratee's</i> type but the element used with the strategy is the
+	 * <i>decorator</i></li> itself.
 	 * </ul>
 	 * 
 	 * @author David
@@ -74,7 +78,35 @@ public enum StrategyTablePolicy {
 
 		@Override
 		public <T extends Operation<?, ?>> Strategy<T> createDefaultDecoratedStrategy() {
-			return new DeferStrategy<T>();
+			return new SubstituteStrategy<T>();
+		}
+	},
+	/**
+	 * This policy will ensure that the particular action is taken when applying
+	 * an operation to an element that no strategy has been explicitly declared
+	 * to handle is based upon whether the element is decorated or not:
+	 * <p>
+	 * <ul>
+	 * <li>{@link #createDefaultBaseStrategy} will return a strategy that does
+	 * nothing</li>
+	 * <li>{@link #createDefaultDecoratedStrategy} will return a strategy that
+	 * applies the decorator's decoratee to the decoratee's corresponding
+	 * strategy. In other words, the ultimately chosen strategy will be based on
+	 * the <i>decoratee's</i> type and the decoratee will be applied to the
+	 * strategy as well.</li>
+	 * </ul>
+	 * 
+	 * @author David
+	 */
+	BYPASS {
+		@Override
+		public <T extends Operation<?, ?>> Strategy<T> createDefaultBaseStrategy() {
+			return new NullStrategy<T>();
+		}
+
+		@Override
+		public <T extends Operation<?, ?>> Strategy<T> createDefaultDecoratedStrategy() {
+			return new BypassStrategy<T>();
 		}
 	};
 

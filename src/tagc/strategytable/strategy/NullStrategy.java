@@ -14,6 +14,6 @@ public class NullStrategy<T extends Operation<?, ?>> implements Strategy<T> {
 	
 	@Override
 	public String toString() {
-		return "Generic null strategy - performs no action when executed";
+		return "Null strategy - performs no action when executed";
 	}
 }

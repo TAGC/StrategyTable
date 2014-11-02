@@ -10,9 +10,10 @@ import java.util.Set;
 
 import tagc.strategytable.element.Element;
 import tagc.strategytable.operation.Operation;
-import tagc.strategytable.strategy.DeferStrategy;
+import tagc.strategytable.strategy.BypassStrategy;
 import tagc.strategytable.strategy.NullStrategy;
 import tagc.strategytable.strategy.Strategy;
+import tagc.strategytable.strategy.SubstituteStrategy;
 
 public class StrategyTable {
 
@@ -482,23 +483,25 @@ public class StrategyTable {
 	}
 
 	/**
-	 * Registers a defer strategy to be used to handle every operation on
-	 * elements of the element decorator type {@code elementDecoratorType}.
+	 * Registers a substitute strategy to be used to handle every operation on
+	 * elements of the element decorator type {@code elementDecoratorType}, in
+	 * which the decoratee's strategy is used but the decorator substitutes
+	 * itself in its place.
 	 * <p>
 	 * In other words, for any element {@code e} where
 	 * {@code e.getClass().equals(elementDecoratorType)}, successful
 	 * registration with this method will mean that any operation that attempts
-	 * to be applied to {@code e} will be applied to the {@code Element} that
-	 * {@code e} wraps instead. Later calls to {@link #addOperationStrategy} can
-	 * be used to replace defer strategies for certain operations if desired.
+	 * to be applied to {@code e} will do so using the strategy that corresponds
+	 * to {@code e}'s wrapped element. Later calls to
+	 * {@link #addOperationStrategy} can be used to replace defer strategies for
+	 * certain operations if desired.
 	 * <p>
 	 * Strategies will only be successfully registered if the existing strategy
 	 * associated with {@code operationType} and {@code elementType} is not
 	 * locked in.
 	 * 
 	 * @param elementDecoratorType
-	 *            the {@code class} of the decorator-type {@code Element} to
-	 *            have operations deferred to the decoratee of
+	 *            the {@code class} of the decorator-type {@code Element}
 	 * @return {@code true} if the strategy registration process succeeded for
 	 *         all types of operations that this strategy table is configured to
 	 *         work for, otherwise {@code false}
@@ -511,7 +514,7 @@ public class StrategyTable {
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 */
-	public boolean addDeferElementStrategies(Class<? extends Element> elementDecoratorType) {
+	public boolean addSubstituteElementStrategies(Class<? extends Element> elementDecoratorType) {
 		if (elementDecoratorType == null)
 			throw new NullPointerException("The element type cannot be null");
 
@@ -520,7 +523,54 @@ public class StrategyTable {
 
 		boolean success = true;
 		for (Class<? extends Operation<?, ?>> operationType : getStrategyMap(elementDecoratorType).keySet()) {
-			success = putOperationStrategy(operationType, elementDecoratorType, createDeferStrategy()) && success;
+			success = putOperationStrategy(operationType, elementDecoratorType, createSubstituteStrategy()) && success;
+		}
+
+		return success;
+	}
+
+	/**
+	 * Registers a bypass strategy to be used to handle every operation on
+	 * elements of the element decorator type {@code elementDecoratorType}, in
+	 * which the decorator is bypassed completely.
+	 * <p>
+	 * In other words, for any element {@code e} where
+	 * {@code e.getClass().equals(elementDecoratorType)}, successful
+	 * registration with this method will mean that any operation that attempts
+	 * to be applied to {@code e} will do so using the strategy that corresponds
+	 * to {@code e}'s wrapped element and will be applied to {@code e}'s wrapped
+	 * element instead of {@code e} itself. Later calls to
+	 * {@link #addOperationStrategy} can be used to replace defer strategies for
+	 * certain operations if desired.
+	 * <p>
+	 * Strategies will only be successfully registered if the existing strategy
+	 * associated with {@code operationType} and {@code elementType} is not
+	 * locked in.
+	 * 
+	 * @param elementDecoratorType
+	 *            the {@code class} of the decorator-type {@code Element}
+	 * @return {@code true} if the strategy registration process succeeded for
+	 *         all types of operations that this strategy table is configured to
+	 *         work for, otherwise {@code false}
+	 * @throws NullPointerException
+	 *             if {@code elementType} is {@code null}
+	 * @throws IllegalArgumentException
+	 *             if {@code elementDecoratorType} has not been registered as
+	 *             the type of an element decorator
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 */
+	public boolean addBypassElementStrategies(Class<? extends Element> elementDecoratorType) {
+		if (elementDecoratorType == null)
+			throw new NullPointerException("The element type cannot be null");
+
+		if (!decoratedElementClassSet.contains(elementDecoratorType))
+			throw new IllegalArgumentException("Only elements of a decorator type can use defer strategies");
+
+		boolean success = true;
+		for (Class<? extends Operation<?, ?>> operationType : getStrategyMap(elementDecoratorType).keySet()) {
+			success = putOperationStrategy(operationType, elementDecoratorType, createBypassStrategy()) && success;
 		}
 
 		return success;
@@ -530,8 +580,12 @@ public class StrategyTable {
 		return new NullStrategy<T>();
 	}
 
-	private static <T extends Operation<?, ?>> Strategy<T> createDeferStrategy() {
-		return new DeferStrategy<T>();
+	private static <T extends Operation<?, ?>> Strategy<T> createSubstituteStrategy() {
+		return new SubstituteStrategy<T>();
+	}
+
+	private static <T extends Operation<?, ?>> Strategy<T> createBypassStrategy() {
+		return new BypassStrategy<T>();
 	}
 
 	private Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> getStrategyMap(
@@ -583,7 +637,25 @@ public class StrategyTable {
 		return (Strategy<T>) strategyMap.get(operationType);
 	}
 
-	private <T extends Operation<?, ?>> Strategy<T> getOperationStrategy(Class<? extends T> operationType,
+	/**
+	 * Returns the {@code Strategy} object that is specified to handle a given
+	 * type of {@code Operation} and {@code Element}.
+	 * 
+	 * @param operationType
+	 *            the type of {@code Operation}
+	 * @param elementType
+	 *            the type of {@code Element}
+	 * @return the {@code Strategy} object corresponding to
+	 *         {@code operationType} and {@code elementType}
+	 * @throws NullPointerException
+	 *             if {@code operationType} or {@code elementType} are
+	 *             {@code null}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType} and operations of type
+	 *             {@code operationType}
+	 */
+	public <T extends Operation<?, ?>> Strategy<T> getOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
 
 		return getOperationStrategyHelper(getStrategyMap(elementType), operationType);
@@ -626,10 +698,7 @@ public class StrategyTable {
 		final Class<? extends Element> elementType = element.getClass();
 		final Strategy<T> strategy = getOperationStrategy(operationType, elementType);
 
-		if (strategy == null)
-			throw new IllegalArgumentException(
-					"There are no strategies defined to work with this type of operation for this element");
-
+		assert (strategy != null) : "The strategy should not be null";
 		strategy.execute(operation, element, this);
 	}
 
@@ -664,49 +733,6 @@ public class StrategyTable {
 		for (Element e : elements) {
 			operate(operation, e);
 		}
-	}
-
-	/**
-	 * Returns the class of the {@code Strategy} object that is specified to
-	 * handle a given type of {@code Operation} and {@code Element}.
-	 * 
-	 * @param operationType
-	 *            the type of {@code Operation}
-	 * @param elementType
-	 *            the type of {@code Element}
-	 * @return the runtime type of the {@code Strategy} object corresponding to
-	 *         {@code operationType} and {@code elementType}
-	 * @throws NullPointerException
-	 *             if {@code operationType} or {@code elementType} are
-	 *             {@code null}
-	 * @throws IllegalArgumentException
-	 *             if this strategy table has not been configured to support
-	 *             elements of type {@code elementType} and operations of type
-	 *             {@code operationType}
-	 */
-	public <T extends Operation<?, ?>> Class<? extends Strategy<T>> getStrategy(Class<? extends T> operationType,
-			Class<? extends Element> elementType) {
-
-		if (operationType == null)
-			throw new NullPointerException("The operation type cannot be null");
-
-		if (elementType == null)
-			throw new NullPointerException("The element type cannot be null");
-
-		return getStrategyTypeHelper(operationType, elementType);
-	}
-
-	/*
-	 * It's safe to make this cast because we know #getOperationElementStrategy
-	 * will return a Strategy<T> and getClass() returns the runtime type of the
-	 * strategy object.
-	 */
-	@SuppressWarnings("unchecked")
-	private <T extends Operation<?, ?>> Class<? extends Strategy<T>> getStrategyTypeHelper(
-			Class<? extends T> operationType, Class<? extends Element> elementType) {
-
-		final Strategy<T> strategy = getOperationStrategy(operationType, elementType);
-		return (Class<? extends Strategy<T>>) strategy.getClass();
 	}
 
 	@Override
