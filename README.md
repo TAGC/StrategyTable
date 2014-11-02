@@ -61,10 +61,10 @@ The `isStrategyLocked`, `isOperationLocked` and `isElementLocked` methods can be
 ### Table Policy
 A StrategyTable can be configured with one of four policies that govern how the StrategyTable behaves when the client has not explicitly registered a strategy for a particular element type/operation type combination:
 
- - `STRICT`: *base element case* and *decorated element case* both use UnimplementedStrategy, forcing the client to explicitly register a strategy for the combination if they wish to use it.
- - `NULL:`: *base element case* and *decorated element case* both use NullStrategy, so no action is performed for any combination that is left unspecified.
- - `DEFAULT:` *base element case* uses a NullStrategy and *decorated element case* uses a SubstituteStrategy.
- - `BYPASS:` *base element case* uses a NullStrategy and *decorated element case* uses a BypassStrategy.
+ - `STRICT`: *base element case* and *decorated element case* both use `UnimplementedStrategy`, forcing the client to explicitly register a strategy for the combination if they wish to use it.
+ - `NULL:`: *base element case* and *decorated element case* both use `NullStrategy`, so no action is performed for any combination that is left unspecified.
+ - `DEFAULT:` *base element case* uses `NullStrategy` and *decorated element case* uses `SubstituteStrategy`.
+ - `BYPASS:` *base element case* uses `NullStrategy` and *decorated element case* uses `BypassStrategy`.
  
 By default, a StrategyTable will use a `DEFAULT` strategy, and this is the case if a StrategyTable's optional construction parameter is omitted. The fourth optional parameter allows the client to configure the policy of the StrategyTable. A StrategyTable's policy can only be configured during its construction.
 
