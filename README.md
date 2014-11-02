@@ -20,7 +20,7 @@ Consider a very unfortunate but possible situation: you have an application that
 The Strategy Table allows for the element hierarchy and the supported types of operations on those elements to vary without the need to modify any existing code except for the code that configures the StrategyTable object itself.
 
 ### Overview
-The principle behind StrategyTable is that it maintains a function of the form f(OperationType, ElementType) -> Strategy, that is, maintains a mapping from a type of operation and element to the strategy that will be used to handle element/operation combinations of those types. When a client wishes to apply an operation to a particular element, the strategy used to do that will be chosen based on the runtime type of the element and the operation. Before applying operations this way, the client will need to construct and configure the StrategyTable so that the appropriate strategy is selected for every element/operation combination.
+The principle behind StrategyTable is that it maintains a function of the form `f(OperationType, ElementType) -> Strategy`, that is, maintains a mapping from a type of operation and element to the strategy that will be used to handle element/operation combinations of those types. When a client wishes to apply an operation to a particular element, the strategy used to do that will be chosen based on the runtime type of the element and the operation. Before applying operations this way, the client will need to construct and configure the StrategyTable so that the appropriate strategy is selected for every element/operation combination.
 
 A StrategyTable is constructed with three mandatory parameters and one optional parameter. The three parameters that must be given are:
 
