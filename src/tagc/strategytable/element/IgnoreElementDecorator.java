@@ -1,27 +1,14 @@
 package tagc.strategytable.element;
 
-class IgnoreElementDecorator extends AbstractElement {
-	
-	private final Element decoratee;
+class IgnoreElementDecorator extends AbstractElementDecorator {
 
 	public IgnoreElementDecorator(Element decoratee) {
-		super(decoratee.getValue());
-		this.decoratee = decoratee;
+		super(decoratee);
 	}
 	
 	@Override
 	public int getValue() {
 		throw new AssertionError("This method should not have been called");
-	}
-	
-	@Override
-	public boolean isDecorated() {
-		return true;
-	}
-
-	@Override
-	public Element withoutDecoration() {
-		return decoratee.withoutDecoration();
 	}
 	
 	@Override

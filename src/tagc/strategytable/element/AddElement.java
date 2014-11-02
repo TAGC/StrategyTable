@@ -1,7 +1,7 @@
 package tagc.strategytable.element;
 
 
-class AddElement extends AbstractElement {
+class AddElement extends AbstractBaseElement {
 
 	public AddElement(int value) {
 		super(value);

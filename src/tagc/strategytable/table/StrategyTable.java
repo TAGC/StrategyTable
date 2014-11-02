@@ -682,24 +682,54 @@ public class StrategyTable {
 	 *             strategy table's {@code policy} is set to {@code Strict}.
 	 */
 	public <T extends Operation<?, ?>> void operate(T operation, Element element) {
+		operateHelper(operation, element, element.getDecorationLevel());
+	}
 
+	/**
+	 * Handles the execution of {@code operation} on {@code element} based on
+	 * the appropriate registered {@link Strategy} (if any) and this strategy
+	 * table's {@code policy}.
+	 * <p>
+	 * {@code element} will be represented at a decoration level of
+	 * {@code decorationLevel}. This method is intended for use by certain
+	 * strategies and clients are advised to use
+	 * {@link #operate(Operation, Element)} in preference to this.
+	 * 
+	 * @param operation
+	 *            the operation to perform on {@code element}
+	 * @param element
+	 *            the {@code Element} object to have {@code operation} applied
+	 *            to
+	 * @param decorationLevel
+	 *            the level of decoration at which to represent {@code element}
+	 * @throws IllegalArgumentException
+	 *             if this strategy table has not been configured to support
+	 *             elements of type {@code elementType}
+	 * @throws NullPointerException
+	 *             if {@code operation} or {@code element} are {@code null}
+	 * @throws UnsupportedOperationException
+	 *             if there is no explicitly registered {@code Strategy} for the
+	 *             types of {@code operation} and {@code element} and this
+	 *             strategy table's {@code policy} is set to {@code Strict}.
+	 */
+	public <T extends Operation<?, ?>> void operate(T operation, Element element, int decorationLevel) {
+		operateHelper(operation, element, decorationLevel);
+	}
+
+	private <T extends Operation<?, ?>> void operateHelper(T operation, Element element, int decorationLevel) {
 		if (operation == null)
 			throw new NullPointerException("The operation cannot be null");
 
 		if (element == null)
 			throw new NullPointerException("The element cannot be null");
 
-		/*
-		 * It's safe to make this cast because #getClass() will return the
-		 * runtime type of the operation which we can guarantee the type of.
-		 */
 		@SuppressWarnings("unchecked")
 		final Class<? extends T> operationType = (Class<? extends T>) operation.getClass();
-		final Class<? extends Element> elementType = element.getClass();
+		final Class<? extends Element> elementType = element.asDecorationAtLevel(decorationLevel).getClass();
 		final Strategy<T> strategy = getOperationStrategy(operationType, elementType);
 
 		assert (strategy != null) : "The strategy should not be null";
-		strategy.execute(operation, element, this);
+		strategy.execute(operation, element, decorationLevel, this);
 	}
 
 	/**

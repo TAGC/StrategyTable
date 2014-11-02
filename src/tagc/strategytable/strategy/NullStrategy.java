@@ -8,7 +8,7 @@ import tagc.strategytable.table.StrategyTable;
 public class NullStrategy<T extends Operation<?, ?>> implements Strategy<T> {
 
 	@Override
-	public void execute(T operation, Element element, StrategyTable table) {
+	public void execute(T operation, Element element, int decorationLevel, StrategyTable table) {
 		// Do nothing.
 	}
 	

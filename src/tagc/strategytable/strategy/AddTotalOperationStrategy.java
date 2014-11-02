@@ -7,7 +7,7 @@ import tagc.strategytable.table.StrategyTable;
 public class AddTotalOperationStrategy implements Strategy<FindTotalOperation> {
 
 	@Override
-	public void execute(FindTotalOperation operation, Element element, StrategyTable table) {
+	public void execute(FindTotalOperation operation, Element element, int decorationLevel, StrategyTable table) {
 		operation.store(operation.get()+element.getValue());
 	}
 	

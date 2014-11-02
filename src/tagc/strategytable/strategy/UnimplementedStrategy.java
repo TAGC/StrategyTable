@@ -7,7 +7,7 @@ import tagc.strategytable.table.StrategyTable;
 public class UnimplementedStrategy<T extends Operation<?, ?>> implements Strategy<T> {
 
 	@Override
-	public void execute(T operation, Element element, StrategyTable table) {
+	public void execute(T operation, Element element, int decorationLevel, StrategyTable table) {
 		throw new UnsupportedOperationException(String.format(
 				"No strategy configured for applying operations of type %s to elements of type %s\n", operation
 						.getClass().getSimpleName(), element.getClass().getSimpleName()));

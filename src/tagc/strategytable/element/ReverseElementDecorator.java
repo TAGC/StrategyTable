@@ -1,27 +1,14 @@
 package tagc.strategytable.element;
 
-class ReverseElementDecorator extends AbstractElement {
-
-	private final Element decoratee;
+class ReverseElementDecorator extends AbstractElementDecorator {
 
 	public ReverseElementDecorator(Element decoratee) {
-		super(decoratee.getValue());
-		this.decoratee = decoratee;
+		super(decoratee);
 	}
 	
 	@Override
 	public int getValue() {
 		return -decoratee.getValue();
-	}
-	
-	@Override
-	public boolean isDecorated() {
-		return true;
-	}
-
-	@Override
-	public Element withoutDecoration() {
-		return decoratee.withoutDecoration();
 	}
 	
 	@Override

@@ -21,9 +21,11 @@ public interface Strategy<T extends Operation<?, ?>> {
 	 *            the {@code Operation} to perform on the element
 	 * @param element
 	 *            the {@code Element} to apply the operation on
+	 * @param decorationLevel
+	 *            the level of decoration at which to represent {@code element}
 	 * @param table
 	 *            the {@code StrategyTable} that contains and is executing this
 	 *            strategy
 	 */
-	void execute(T operation, Element element, StrategyTable table);
+	void execute(T operation, Element element, int decorationLevel, StrategyTable table);
 }

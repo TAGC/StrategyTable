@@ -27,10 +27,28 @@ public interface Element {
 	boolean isDecorated();
 
 	/**
-	 * Returns a version of this element without any decoration. If this is an
-	 * undecorated node, the element returns a reference to itself.
+	 * Returns the number of decorations wrapped around the base element at the
+	 * bottom of the decoration stack, including this if this is a decoration.
+	 * <p>
+	 * If this is a base (undecorated) element, this method returns 0.
 	 * 
-	 * @return an undecorated version of this node
+	 * @return the decoration level
 	 */
-	Element withoutDecoration();
+	int getDecorationLevel();
+
+	/**
+	 * Returns a representation of this element with the decoration at level
+	 * {@code decorationLevel}.
+	 * <p>
+	 * If {@code decorationLevel} is 0, this returns the undecorated version of
+	 * this element. If {@code decorationLevel == } {@link #getDecorationLevel},
+	 * this returns this element.
+	 * 
+	 * @param decorationLevel
+	 *            the decoration level
+	 * @return the representation of this element at the given decoration level
+	 * @throws IllegalArgumentException
+	 *             if {@code decorationLevel > } {@link #getDecorationLevel}
+	 */
+	Element asDecorationAtLevel(int decorationLevel);
 }

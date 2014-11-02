@@ -1,6 +1,6 @@
 package tagc.strategytable.element;
 
-class MultElement extends AbstractElement {
+class MultElement extends AbstractBaseElement {
 
 	public MultElement(int value) {
 		super(value);

@@ -7,12 +7,12 @@ import tagc.strategytable.table.StrategyTable;
 public class BypassStrategy<T extends Operation<?, ?>> implements Strategy<T> {
 	
 	@Override
-	public void execute(T operation, Element element, StrategyTable table) {
+	public void execute(T operation, Element element, int decorationLevel, StrategyTable table) {
 		if (!element.isDecorated())
 			throw new IllegalArgumentException("This strategy cannot be applied to elements of type: "
 					+ element.getClass().getSimpleName());
 
-		table.operate(operation, element.withoutDecoration());
+		table.operate(operation, element.asDecorationAtLevel(decorationLevel-1));
 	}
 
 	@Override

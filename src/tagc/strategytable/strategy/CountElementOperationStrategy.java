@@ -7,7 +7,7 @@ import tagc.strategytable.table.StrategyTable;
 public class CountElementOperationStrategy implements Strategy<CountElementOperation> {
 
 	@Override
-	public void execute(CountElementOperation operation, Element element, StrategyTable table) {
+	public void execute(CountElementOperation operation, Element element, int decorationLevel, StrategyTable table) {
 		operation.store(operation.get()+1);
 	}
 	
