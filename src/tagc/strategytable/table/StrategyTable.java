@@ -3,7 +3,7 @@ package tagc.strategytable.table;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -106,7 +106,7 @@ public class StrategyTable {
 		this.operationLockStates = new HashMap<Class<? extends Operation<?, ?>>, Boolean>();
 		this.decoratedElementClassSet = decoratedElementClassSet;
 
-		final Set<Class<? extends Element>> combinedElementClassSet = new HashSet<Class<? extends Element>>(
+		final Set<Class<? extends Element>> combinedElementClassSet = new LinkedHashSet<Class<? extends Element>>(
 				baseElementClassSet);
 		combinedElementClassSet.addAll(decoratedElementClassSet);
 
@@ -302,7 +302,7 @@ public class StrategyTable {
 	 *             {@code operationType}
 	 * @see #isStrategyLocked(Class, Class)
 	 */
-	public <T extends Operation<?, ?>> boolean addOperationStrategy(Class<? extends T> operationType,
+	public <T extends Operation<?, ?>> boolean registerOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType, Strategy<T> strategy) {
 
 		if (operationType == null)
@@ -348,15 +348,15 @@ public class StrategyTable {
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
 	 *             operations of type {@code operationType}
-	 * @see #addOperationStrategy(Class, Class, Strategy)
+	 * @see #registerOperationStrategy(Class, Class, Strategy)
 	 * @see #isStrategyLocked(Class, Class)
 	 */
-	public <T extends Operation<?, ?>> boolean addOperationStrategies(Class<? extends T> operationType,
+	public <T extends Operation<?, ?>> boolean registerOperationStrategies(Class<? extends T> operationType,
 			Strategy<T> strategy) {
 		boolean totalSuccess = true;
 
 		for (Class<? extends Element> elementType : table.keySet()) {
-			final boolean success = addOperationStrategy(operationType, elementType, strategy);
+			final boolean success = registerOperationStrategy(operationType, elementType, strategy);
 			totalSuccess &= success;
 		}
 
@@ -392,7 +392,7 @@ public class StrategyTable {
 	 *             {@code operationType}
 	 * @see #isStrategyLocked(Class, Class)
 	 */
-	public <T extends Operation<?, ?>> boolean addNullOperationStrategy(Class<? extends T> operationType,
+	public <T extends Operation<?, ?>> boolean registerNullOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
 
 		if (operationType == null)
@@ -428,14 +428,14 @@ public class StrategyTable {
 	 * @return {@code true} if the strategy registration process succeeded for
 	 *         all types of element that this strategy table is configured to
 	 *         work for, otherwise {@code false}
-	 * @see #addNullOperationStrategy(Class, Class)
+	 * @see #registerNullOperationStrategy(Class, Class)
 	 * @see #isStrategyLocked(Class, Class)
 	 */
-	public <T extends Operation<?, ?>> boolean addNullOperationStrategies(Class<? extends T> operationType) {
+	public <T extends Operation<?, ?>> boolean registerNullOperationStrategies(Class<? extends T> operationType) {
 		boolean success = true;
 
 		for (Class<? extends Element> elementType : table.keySet()) {
-			success = addNullOperationStrategy(operationType, elementType) && success;
+			success = registerNullOperationStrategy(operationType, elementType) && success;
 		}
 
 		return success;
@@ -448,8 +448,8 @@ public class StrategyTable {
 	 * In other words, this method specifies that no actions should be performed
 	 * by any operation that acts on an element {@code e} if
 	 * {@code e.getClass().equals(elementType)}. Later calls to
-	 * {@link #addOperationStrategy} can be used to replace null strategies for
-	 * certain operations if desired.
+	 * {@link #registerOperationStrategy} can be used to replace null strategies
+	 * for certain operations if desired.
 	 * <p>
 	 * One example of where it may be appropriate to call this method on a type
 	 * of element that should be ignored by most or all operations.
@@ -470,7 +470,7 @@ public class StrategyTable {
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 */
-	public boolean addNullElementStrategies(Class<? extends Element> elementType) {
+	public boolean registerNullElementStrategies(Class<? extends Element> elementType) {
 		if (elementType == null)
 			throw new NullPointerException("The element type cannot be null");
 
@@ -493,8 +493,8 @@ public class StrategyTable {
 	 * registration with this method will mean that any operation that attempts
 	 * to be applied to {@code e} will do so using the strategy that corresponds
 	 * to {@code e}'s wrapped element. Later calls to
-	 * {@link #addOperationStrategy} can be used to replace defer strategies for
-	 * certain operations if desired.
+	 * {@link #registerOperationStrategy} can be used to replace defer
+	 * strategies for certain operations if desired.
 	 * <p>
 	 * Strategies will only be successfully registered if the existing strategy
 	 * associated with {@code operationType} and {@code elementType} is not
@@ -514,7 +514,7 @@ public class StrategyTable {
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 */
-	public boolean addSubstituteElementStrategies(Class<? extends Element> elementDecoratorType) {
+	public boolean registerSubstituteElementStrategies(Class<? extends Element> elementDecoratorType) {
 		if (elementDecoratorType == null)
 			throw new NullPointerException("The element type cannot be null");
 
@@ -540,8 +540,8 @@ public class StrategyTable {
 	 * to be applied to {@code e} will do so using the strategy that corresponds
 	 * to {@code e}'s wrapped element and will be applied to {@code e}'s wrapped
 	 * element instead of {@code e} itself. Later calls to
-	 * {@link #addOperationStrategy} can be used to replace defer strategies for
-	 * certain operations if desired.
+	 * {@link #registerOperationStrategy} can be used to replace defer
+	 * strategies for certain operations if desired.
 	 * <p>
 	 * Strategies will only be successfully registered if the existing strategy
 	 * associated with {@code operationType} and {@code elementType} is not
@@ -561,7 +561,7 @@ public class StrategyTable {
 	 *             if this strategy table has not been configured to support
 	 *             elements of type {@code elementType}
 	 */
-	public boolean addBypassElementStrategies(Class<? extends Element> elementDecoratorType) {
+	public boolean registerBypassElementStrategies(Class<? extends Element> elementDecoratorType) {
 		if (elementDecoratorType == null)
 			throw new NullPointerException("The element type cannot be null");
 
@@ -658,6 +658,10 @@ public class StrategyTable {
 	public <T extends Operation<?, ?>> Strategy<T> getOperationStrategy(Class<? extends T> operationType,
 			Class<? extends Element> elementType) {
 
+		/*
+		 * Strategies are stateless, immutable objects so there is no need to
+		 * return them defensively.
+		 */
 		return getOperationStrategyHelper(getStrategyMap(elementType), operationType);
 	}
 
@@ -682,6 +686,9 @@ public class StrategyTable {
 	 *             strategy table's {@code policy} is set to {@code Strict}.
 	 */
 	public <T extends Operation<?, ?>> void operate(T operation, Element element) {
+		if(element == null)
+			throw new NullPointerException("The element cannot be null");
+		
 		operateHelper(operation, element, element.getDecorationLevel());
 	}
 
@@ -704,7 +711,8 @@ public class StrategyTable {
 	 *            the level of decoration at which to represent {@code element}
 	 * @throws IllegalArgumentException
 	 *             if this strategy table has not been configured to support
-	 *             elements of type {@code elementType}
+	 *             elements of type {@code elementType} or operations of type
+	 *             {@code operationType}
 	 * @throws NullPointerException
 	 *             if {@code operation} or {@code element} are {@code null}
 	 * @throws UnsupportedOperationException
@@ -770,7 +778,14 @@ public class StrategyTable {
 		String output = "Strategy table\n";
 		for (Entry<Class<? extends Element>, Map<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>>> elementMap : table
 				.entrySet()) {
-			output += "\nElement type: " + elementMap.getKey().getSimpleName() + "\n";
+			
+			final Class<? extends Element> elementClass = elementMap.getKey();
+			if(decoratedElementClassSet.contains(elementClass)) {
+				output += "\nDecorated element type:\t" + elementClass.getSimpleName() + "\n";
+			} else {
+				output += "\nBase element type:\t" + elementClass.getSimpleName() + "\n";
+			}
+			
 
 			for (Entry<Class<? extends Operation<?, ?>>, Strategy<? extends Operation<?, ?>>> strategyMap : elementMap
 					.getValue().entrySet()) {

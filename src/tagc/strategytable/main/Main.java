@@ -27,7 +27,7 @@ public class Main {
 	private static final Pattern INFO_PATTERN = Pattern.compile("^\\s*info\\s*$", Pattern.CASE_INSENSITIVE);
 	private static final Pattern USE_ILLEGAL_STRATEGY_TABLE = Pattern.compile("^\\s*st illegal\\s*$",
 			Pattern.CASE_INSENSITIVE);
-	private static final Pattern USE_NULL_STRATEGY_TABLE = Pattern.compile("^\\s*st no defer\\s*$",
+	private static final Pattern USE_NULL_STRATEGY_TABLE = Pattern.compile("^\\s*st null\\s*$",
 			Pattern.CASE_INSENSITIVE);
 	private static final Pattern USE_DEFAULT_STRATEGY_TABLE = Pattern.compile("^\\s*st default\\s*$",
 			Pattern.CASE_INSENSITIVE);
@@ -112,8 +112,7 @@ public class Main {
 				+ "\t'st illegal' to choose the illegal strategy table\n"
 				+ "\t'st null' to choose the null strategy table\n"
 				+ "\t'st default' to choose the default strategy table\n"
-				+ "\t'st bypass' to choose the bypass strategy table\n"
-				+ "\t'info' to print out the current setup\n"
+				+ "\t'st bypass' to choose the bypass strategy table\n" + "\t'info' to print out the current setup\n"
 				+ "\t'go' to run the demonstration with the current setup\n" + "\t'quit' to close this application\n"
 				+ "All commands are case insensitive.");
 
@@ -148,7 +147,7 @@ public class Main {
 			System.out.println("Setting strategy table: " + newTableType);
 			interpretInput(SCANNER.nextLine(), elements, newTableType);
 		}
-		
+
 		else if ((m = USE_NULL_STRATEGY_TABLE.matcher(input)) != null && m.matches()) {
 			final StrategyTableType newTableType = StrategyTableType.NULL;
 			System.out.println("Setting strategy table: " + newTableType);
@@ -287,30 +286,12 @@ public class Main {
 				operationClassSet, StrategyTablePolicy.STRICT);
 
 		/*
-		 * Locks in current strategy which is illegally left unspecified.
+		 * Omit registration of strategies for decorators, which is illegal.
 		 */
 		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
-
-		/*
-		 * We omit explicit registration of strategies for
-		 * ReverseElementDecorator. This is illegal.
-		 */
 		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
 
-		/*
-		 * Specifies strategies for 'FindTotalOperation' operations.
-		 */
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
-				new AddTotalOperationStrategy());
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
-				new MultTotalOperationStrategy());
-
-		/*
-		 * Specifies strategies for 'CountElementOperation' operations.
-		 */
-		strategyTable.addOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
-
-		return strategyTable;
+		return completeStrategyTableSetup(strategyTable);
 	}
 
 	private static StrategyTable setupNullStrategyTable(Set<Class<? extends Element>> elementClassSet,
@@ -320,32 +301,13 @@ public class Main {
 				operationClassSet, StrategyTablePolicy.NULL);
 
 		/*
-		 * Locks in current strategy but does not specify a strategy to use
-		 * (which is legal in this case).
+		 * Omit registration of strategies for decorators, which is legal but
+		 * results in null behaviour.
 		 */
 		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
-
-		/*
-		 * We omit explicit registration of strategies for
-		 * ReverseElementDecorator. This will cause operations to ignore
-		 * elements wrapped in this decorator.
-		 */
 		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
 
-		/*
-		 * Specifies strategies for 'FindTotalOperation' operations.
-		 */
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
-				new AddTotalOperationStrategy());
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
-				new MultTotalOperationStrategy());
-
-		/*
-		 * Specifies strategies for 'CountElementOperation' operations.
-		 */
-		strategyTable.addOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
-
-		return strategyTable;
+		return completeStrategyTableSetup(strategyTable);
 	}
 
 	private static StrategyTable setupDefaultStrategyTable(Set<Class<? extends Element>> elementClassSet,
@@ -358,7 +320,7 @@ public class Main {
 		 * Specifies all operations to ignore IgnoreElementDecorator elements
 		 * and lock that in.
 		 */
-		strategyTable.addNullElementStrategies(ElementFactory.getIgnoreElementDecoratorClass());
+		strategyTable.registerNullElementStrategies(ElementFactory.getIgnoreElementDecoratorClass());
 		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
 
 		/*
@@ -368,20 +330,7 @@ public class Main {
 		 */
 		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
 
-		/*
-		 * Specifies strategies for 'FindTotalOperation' operations.
-		 */
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
-				new AddTotalOperationStrategy());
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
-				new MultTotalOperationStrategy());
-
-		/*
-		 * Specifies strategies for 'CountElementOperation' operations.
-		 */
-		strategyTable.addOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
-
-		return strategyTable;
+		return completeStrategyTableSetup(strategyTable);
 	}
 
 	private static StrategyTable setupBypassStrategyTable(Set<Class<? extends Element>> elementClassSet,
@@ -400,20 +349,23 @@ public class Main {
 		strategyTable.setElementStrategiesLocked(ElementFactory.getIgnoreElementDecoratorClass(), true);
 		strategyTable.setElementStrategiesLocked(ElementFactory.getReverseElementDecoratorClass(), true);
 
+		return completeStrategyTableSetup(strategyTable);
+	}
+
+	private static StrategyTable completeStrategyTableSetup(final StrategyTable strategyTable) {
 		/*
 		 * Specifies strategies for 'FindTotalOperation' operations.
 		 */
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
+		strategyTable.registerOperationStrategy(FindTotalOperation.class, ElementFactory.getAddElementClass(),
 				new AddTotalOperationStrategy());
-		strategyTable.addOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
+		strategyTable.registerOperationStrategy(FindTotalOperation.class, ElementFactory.getMultElementClass(),
 				new MultTotalOperationStrategy());
 
 		/*
 		 * Specifies strategies for 'CountElementOperation' operations.
 		 */
-		strategyTable.addOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
+		strategyTable.registerOperationStrategies(CountElementOperation.class, new CountElementOperationStrategy());
 
 		return strategyTable;
 	}
-
 }
